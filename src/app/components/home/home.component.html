@@ -1,0 +1,12 @@
+<form class="px-4 d-flex flex-column h-100 justify-content-center" >
+    <input type="file" (change)="onFileSelected($event)" accept=".mp3">
+    <button (click)="onSubmit()">Upload</button>
+
+    <input #input type="text" placeholder="Enter file name">
+    <button (click)="getTrack(input.value)">Play</button>
+    <audio *ngIf="audioBlobUrl" controls>
+        <source [src]="audioBlobUrl" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <div *ngIf="errorMessage">{{ errorMessage }}</div>
+</form>
