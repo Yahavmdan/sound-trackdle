@@ -1,10 +1,13 @@
 import { Component } from '@angular/core';
 import { BaseService } from "../../shared/services/base.service";
+import { NgIf } from "@angular/common";
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrl: './home.component.css'
+  styleUrl: './home.component.css',
+  imports: [NgIf],
+  standalone: true
 })
 
 export class HomeComponent {
