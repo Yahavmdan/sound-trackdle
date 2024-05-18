@@ -1,0 +1,900 @@
+@use '@angular/material' as mat;
+@include mat.core();
+$sound-trackdle-primary: mat.define-palette(mat.$indigo-palette);
+$sound-trackdle-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$sound-trackdle-warn: mat.define-palette(mat.$red-palette);
+$sound-trackdle-theme: mat.define-light-theme((
+  color: (
+    primary: $sound-trackdle-primary,
+    accent: $sound-trackdle-accent,
+    warn: $sound-trackdle-warn,
+  ),
+  typography: mat.define-typography-config(),
+  density: 0
+));
+@include mat.all-component-themes($sound-trackdle-theme);
+
+///////////////// variables /////////////////
+/////////////////////////////////////////////
+
+$green: #6ecca1;
+$light-green: #9fccb8;
+$yellow: #ffcc5c;
+$light-yellow: #ffc980;
+$red: #fc5751;
+$light-red: #ff918c;
+$blue: #7bb4d5;
+$light-blue: #9dbbcb;
+$black: #1e1e1e;
+$grey: #333333;
+$grey2: #5e5e5e;
+$grey3: #868686;
+$grey4: #e5e5e5;
+$grey5: #d2d2d2;
+$grey6: #f6f6f6;
+$white: #ffffff;
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.app-container {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+///////////////// containers /////////////////
+/////////////////////////////////////////////
+
+.dark-theme-background {
+  background: #001c2d;
+  transition: background-color ease-in-out 200ms;
+}
+
+.light-theme-background {
+  background: #ffffff;
+  transition: background-color ease-in-out 200ms;
+}
+
+.dark-theme-text {
+  color: #f6f6f6;
+}
+
+.light-theme-text {
+  color: #001034;
+}
+
+.form-container {
+  width: 600px;
+  background-color: #fafffe;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 15px 29px 0 #DBDBDB;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+///////////////// helpers ///////////////////
+/////////////////////////////////////////////
+
+.spinner {
+  animation: rotate-center 1s linear infinite both;
+}
+
+.rtl {
+  direction: rtl;
+}
+
+.ltr {
+  direction: ltr;
+}
+
+@keyframes rotate-center {
+  0% {
+    transform: rotate(-360deg);
+  }
+}
+
+.notification-dot {
+  position: absolute;
+  min-height: 15px;
+  min-width: 15px;
+  max-height: 15px;
+  max-width: 15px;
+  border-radius: 50%;
+}
+
+.blur-overlay {
+  position: fixed;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  backdrop-filter: blur(2px);
+  background-color: rgba(0, 0, 0, 0.13);
+}
+
+.transition-all {
+  transition: all 200ms ease-in-out;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.grab {
+  cursor: grab;
+}
+
+.flip {
+  transform: scaleX(-1);
+}
+
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+///////////////// positions //////////////////
+/////////////////////////////////////////////
+
+.l-0 {
+  left: 0 !important;
+}
+
+.l-1 {
+  left: 0.25rem !important;
+}
+
+.l-2 {
+  left: 0.5rem !important;
+}
+
+.l-3 {
+  left: 1rem !important;
+}
+
+.l-4 {
+  left: 1.5rem !important;
+}
+
+.l-5 {
+  left: 3rem !important;
+}
+
+.l-100 {
+  left: 100% !important;
+}
+
+.l-a {
+  left: auto !important;
+}
+
+.r-0 {
+  right: 0 !important;
+}
+
+.r-1 {
+  right: 0.25rem !important;
+}
+
+.r-2 {
+  right: 0.5rem !important;
+}
+
+.r-3 {
+  right: 1rem !important;
+}
+
+.r-4 {
+  right: 1.5rem !important;
+}
+
+.r-5 {
+  right: 3rem !important;
+}
+
+.r-100 {
+  right: 100% !important;
+}
+
+.r-a {
+  right: auto !important;
+}
+
+.t-0 {
+  top: 0 !important;
+}
+
+.t-1 {
+  top: 0.25rem !important;
+}
+
+.t-2 {
+  top: 0.5rem !important;
+}
+
+.t-3 {
+  top: 1rem !important;
+}
+
+.t-4 {
+  top: 1.5rem !important;
+}
+
+.t-5 {
+  top: 3rem !important;
+}
+
+.t-100 {
+  top: 100% !important;
+}
+
+.t-a {
+  top: auto !important;
+}
+
+.b-0 {
+  bottom: 0 !important;
+}
+
+.b-1 {
+  bottom: 0.25rem !important;
+}
+
+.b-2 {
+  bottom: 0.5rem !important;
+}
+
+.b-3 {
+  bottom: 1rem !important;
+}
+
+.b-4 {
+  bottom: 1.5rem !important;
+}
+
+.b-5 {
+  bottom: 3rem !important;
+}
+
+.b-100 {
+  bottom: 100% !important;
+}
+
+.b-a {
+  bottom: auto !important;
+}
+
+//////////// margins-paddings ////////////////
+/////////////////////////////////////////////
+
+.ml-1 {
+  margin-left: 0.25rem !important;
+}
+
+.ml-2 {
+  margin-left: 0.5rem !important;
+}
+
+.ml-3 {
+  margin-left: 1rem !important;
+}
+
+.ml-4 {
+  margin-left: 1.5rem !important;
+}
+
+.ml-5 {
+  margin-left: 3rem !important;
+}
+
+.mr-1 {
+  margin-right: 0.25rem !important;
+}
+
+.mr-2 {
+  margin-right: 0.5rem !important;
+}
+
+.mr-3 {
+  margin-right: 1rem !important;
+}
+
+.mr-4 {
+  margin-right: 1.5rem !important;
+}
+
+.mr-5 {
+  margin-right: 3rem !important;
+}
+
+.mt-1 {
+  margin-top: 0.25rem !important;
+}
+
+.mt-2 {
+  margin-top: 0.5rem !important;
+}
+
+.mt-3 {
+  margin-top: 1rem !important;
+}
+
+.mt-4 {
+  margin-top: 1.5rem !important;
+}
+
+.mt-5 {
+  margin-top: 3rem !important;
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem !important;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem !important;
+}
+
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem !important;
+}
+
+.mb-5 {
+  margin-bottom: 3rem !important;
+}
+
+.pl-1 {
+  padding-left: 0.25rem !important;
+}
+
+.pl-2 {
+  padding-left: 0.5rem !important;
+}
+
+.pl-3 {
+  padding-left: 1rem !important;
+}
+
+.pl-4 {
+  padding-left: 1.5rem !important;
+}
+
+.pl-5 {
+  padding-left: 3rem !important;
+}
+
+.pr-1 {
+  padding-right: 0.25rem !important;
+}
+
+.pr-2 {
+  padding-right: 0.5rem !important;
+}
+
+.pr-3 {
+  padding-right: 1rem !important;
+}
+
+.pr-4 {
+  padding-right: 1.5rem !important;
+}
+
+.pr-5 {
+  padding-right: 3rem !important;
+}
+
+.pt-1 {
+  padding-top: 0.25rem !important;
+}
+
+.pt-2 {
+  padding-top: 0.5rem !important;
+}
+
+.pt-3 {
+  padding-top: 1rem !important;
+}
+
+.pt-4 {
+  padding-top: 1.5rem !important;
+}
+
+.pt-5 {
+  padding-top: 3rem !important;
+}
+
+.pb-1 {
+  padding-bottom: 0.25rem !important;
+}
+
+.pb-2 {
+  padding-bottom: 0.5rem !important;
+}
+
+.pb-3 {
+  padding-bottom: 1rem !important;
+}
+
+.pb-4 {
+  padding-bottom: 1.5rem !important;
+}
+
+.pb-5 {
+  padding-bottom: 3rem !important;
+}
+
+/////////// background-colors ///////////////
+/////////////////////////////////////////////
+
+.bg-red {
+  background-color: $red !important;
+}
+
+.bg-light-red {
+  background-color: $light-red !important;
+}
+
+.bg-green {
+  background-color: $green !important;
+}
+
+.bg-light-green {
+  background-color: $light-green !important;
+}
+
+.bg-yellow {
+  background-color: $yellow !important;
+}
+
+.bg-light-yellow {
+  background-color: $light-yellow !important;
+}
+
+.bg-blue {
+  background-color: $blue !important;
+}
+
+.bg-light-blue {
+  background-color: $light-blue !important;
+}
+
+.bg-black {
+  background-color: $black !important;
+}
+
+.bg-grey {
+  background-color: $grey !important;
+}
+
+.bg-grey2 {
+  background-color: $grey2 !important;
+}
+
+.bg-grey3 {
+  background-color: $grey3 !important;
+}
+
+.bg-grey4 {
+  background-color: $grey4 !important;
+}
+
+.bg-grey5 {
+  background-color: $grey5 !important;
+}
+
+.bg-grey6 {
+  background-color: $grey6 !important;
+}
+
+.bg-white {
+  background-color: $white !important;
+}
+
+///////////////// colors ////////////////////
+/////////////////////////////////////////////
+
+.text-red {
+  color: $red !important;
+}
+
+.text-light-red {
+  color: $light-red !important;
+}
+
+.text-green {
+  color: $green !important;
+}
+
+.text-light-green {
+  color: $light-green !important;
+}
+
+.text-yellow {
+  color: $yellow !important;
+}
+
+.text-light-yellow {
+  color: $light-yellow !important;
+}
+
+.text-blue {
+  color: $blue !important;
+}
+
+.text-light-blue {
+  color: $light-blue !important;
+}
+
+.text-black {
+  color: $black !important;
+}
+
+.text-grey {
+  color: $grey !important;
+}
+
+.text-grey2 {
+  color: $grey2 !important;
+}
+
+.text-grey3 {
+  color: $grey3 !important;
+}
+
+.text-grey4 {
+  color: $grey4 !important;
+}
+
+.text-grey5 {
+  color: $grey5 !important;
+}
+
+.text-grey6 {
+  color: $grey6 !important;
+}
+
+.text-white {
+  color: $white !important;
+}
+
+///////////////// fonts /////////////////////
+/////////////////////////////////////////////
+
+.f-8 {
+  font-size: 8px;
+}
+
+.f-9 {
+  font-size: 9px;
+}
+
+.f-10 {
+  font-size: 10px;
+}
+
+.f-11 {
+  font-size: 11px;
+}
+
+.f-12 {
+  font-size: 12px;
+}
+
+.f-13 {
+  font-size: 13px;
+}
+
+.f-14 {
+  font-size: 14px;
+}
+
+.f-15 {
+  font-size: 15px;
+}
+
+.f-16 {
+  font-size: 16px;
+}
+
+.f-17 {
+  font-size: 17px;
+}
+
+.f-18 {
+  font-size: 18px;
+}
+
+.f-19 {
+  font-size: 19px;
+}
+
+.f-20 {
+  font-size: 20px;
+}
+
+.f-22 {
+  font-size: 22px;
+}
+
+.f-24 {
+  font-size: 24px;
+}
+
+.f-26 {
+  font-size: 26px;
+}
+
+.f-28 {
+  font-size: 28px;
+}
+
+.f-30 {
+  font-size: 30px;
+}
+
+.f-32 {
+  font-size: 32px;
+}
+
+.f-34 {
+  font-size: 34px;
+}
+
+.f-36 {
+  font-size: 36px;
+}
+
+.f-38 {
+  font-size: 38px;
+}
+
+.f-40 {
+  font-size: 40px;
+}
+
+.f-80 {
+  font-size: 80px;
+}
+
+///////////////// Weights /////////////////////
+/////////////////////////////////////////////
+
+.fw-100 {
+  font-weight: 100;
+}
+
+.fw-200 {
+  font-weight: 200;
+}
+
+.fw-300 {
+  font-weight: 300;
+}
+
+.fw-400 {
+  font-weight: 400;
+}
+
+.fw-500 {
+  font-weight: 500;
+}
+
+.fw-600 {
+  font-weight: 600;
+}
+
+.fw-700 {
+  font-weight: 700;
+}
+
+.fw-800 {
+  font-weight: 800;
+}
+
+.fw-900 {
+  font-weight: 900;
+}
+
+////////////// media queries ////////////////
+/////////////////////////////////////////////
+
+@media (max-width: 992px) {
+  .f-lg-8 {
+    font-size: 8px;
+  }
+  .f-lg-10 {
+    font-size: 10px;
+  }
+  .f-lg-12 {
+    font-size: 12px;
+  }
+  .f-lg-14 {
+    font-size: 14px;
+  }
+  .f-lg-16 {
+    font-size: 16px;
+  }
+  .f-lg-18 {
+    font-size: 18px;
+  }
+  .f-lg-20 {
+    font-size: 20px;
+  }
+  .f-lg-22 {
+    font-size: 22px;
+  }
+  .f-lg-24 {
+    font-size: 24px;
+  }
+  .f-lg-26 {
+    font-size: 26px;
+  }
+  .f-lg-28 {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .f-md-8 {
+    font-size: 8px;
+  }
+  .f-md-10 {
+    font-size: 10px;
+  }
+  .f-md-12 {
+    font-size: 12px;
+  }
+  .f-md-14 {
+    font-size: 14px;
+  }
+  .f-md-16 {
+    font-size: 16px;
+  }
+  .f-md-18 {
+    font-size: 18px;
+  }
+  .f-md-20 {
+    font-size: 20px;
+  }
+  .f-md-22 {
+    font-size: 22px;
+  }
+  .f-md-24 {
+    font-size: 24px;
+  }
+  .f-md-26 {
+    font-size: 26px;
+  }
+  .f-md-28 {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 512px) {
+
+  .f-sm-8 {
+    font-size: 8px;
+  }
+  .f-sm-10 {
+    font-size: 10px;
+  }
+  .f-sm-12 {
+    font-size: 12px;
+  }
+  .f-sm-14 {
+    font-size: 14px;
+  }
+  .f-sm-16 {
+    font-size: 16px;
+  }
+  .f-sm-18 {
+    font-size: 18px;
+  }
+  .f-sm-20 {
+    font-size: 20px;
+  }
+  .f-sm-22 {
+    font-size: 22px;
+  }
+  .f-sm-24 {
+    font-size: 24px;
+  }
+  .f-sm-26 {
+    font-size: 26px;
+  }
+  .f-sm-28 {
+    font-size: 28px;
+  }
+
+  .button-layout {
+    font-size: 10px;
+  }
+}
+
+////////////// heights/widths ////////////////
+/////////////////////////////////////////////
+
+.h-50px {
+  height: 50px;
+}
+
+.h-100px {
+  height: 100px;
+}
+
+.w-50px {
+  width: 50px;
+}
+
+.w-100px {
+  width: 100px;
+}
+
+//////////////////////////////////////////////
+/////////////////////////////////////////////
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 2px;
+}
+
+::-webkit-scrollbar-button {
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e1e1e1;
+  border: 0 none #ffffff;
+  border-radius: 50px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #bdbdbd;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #a4a4a4;
+}
+
+::-webkit-scrollbar-track {
+  background: #666666;
+  border: 0 none #ffffff;
+}
+
+::-webkit-scrollbar-track:hover {
+  background: #666666;
+}
+
+::-webkit-scrollbar-track:active {
+  background: #8d8d8d;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+app-root > div.dark-theme-background > main > app-home > div > div.card-wrapper {
+  background: #004064;
+  transition: background-color ease-in-out 200ms;
+}
+
+app-root > div.light-theme-background > main > app-home > div > div.card-wrapper {
+  background-color: #ebf7ff;
+  transition: background-color ease-in-out 200ms;
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

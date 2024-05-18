@@ -1,0 +1,198 @@
+@import '../../../styles.scss';
+
+.many-confetti {
+  overflow: hidden;
+  position: absolute;
+  pointer-events: none;
+  inset: 0;
+}
+
+.card-wrapper {
+  border: transparent 1px solid;
+  border-radius: 20px;
+  padding: 1em;
+  box-shadow: 7px 9px 28px -3px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+}
+
+.confetti {
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  transform-origin: left top;
+  animation: confetti 4s ease-in-out -2s infinite;
+}
+
+@keyframes confetti {
+  0% {
+    transform: rotateZ(15deg) rotateY(0deg) translate(0, 0);
+  }
+  25% {
+    transform: rotateZ(5deg) rotateY(360deg) translate(-5vw, 20vh);
+  }
+  50% {
+    transform: rotateZ(15deg) rotateY(720deg) translate(5vw, 60vh);
+  }
+  75% {
+    transform: rotateZ(5deg) rotateY(1080deg) translate(-10vw, 80vh);
+  }
+  100% {
+    transform: rotateZ(15deg) rotateY(1440deg) translate(10vw, 110vh);
+  }
+}
+
+.confetti:nth-child(1) {
+  left: 10%;
+  animation-delay: .001s;
+  background-color: #fc0120;
+}
+.confetti:nth-child(2) {
+  left: 20%;
+  animation-delay: -5s;
+  background-color: #8257e6;
+}
+.confetti:nth-child(3) {
+  left: 30%;
+  animation-delay: -3s;
+  background-color: #ffbf4d;
+}
+.confetti:nth-child(4) {
+  left: 40%;
+  animation-delay: -2.5s;
+  background-color: #fe5d7a;
+}
+.confetti:nth-child(5) {
+  left: 50%;
+  animation-delay: -4s;
+  background-color: #45ec9c;
+}
+.confetti:nth-child(6) {
+  left: 60%;
+  animation-delay: -6s;
+  background-color: #f6e327;
+}
+.confetti:nth-child(7) {
+  left: 70%;
+  animation-delay: -1.5s;
+  background-color: #f769ce;
+}
+.confetti:nth-child(8) {
+  left: 80%;
+  animation-delay: -2s;
+  background-color: #007de7;
+}
+.confetti:nth-child(9) {
+  left: 90%;
+  animation-delay: -3.5s;
+  background-color: #63b4fc;
+}
+.confetti:nth-child(10) {
+  left: 100%;
+  animation-delay: -2.5s;
+  background-color: #f9c4ea;
+}
+
+.active {
+  background: #81aec7;
+}
+
+//input {
+//  height: 2.6rem;
+//  padding-left: 1rem;
+//  border-top: solid 1px #b7b7b7 !important;
+//  border-bottom: solid 1px #b7b7b7 !important;
+//  border-right: solid 1px #b7b7b7 !important;
+//  border-left: unset !important;
+//  box-shadow: unset;
+//  border-radius: 0 15px 15px 0;
+//  margin: 0;
+//  color: #a1a1a1;
+//  &::placeholder {
+//    color: #a1a1a1;
+//  }
+//
+//  &:focus {
+//    outline: none !important;
+//  }
+//
+//  &.error {
+//    border-top: solid 1px $red !important;
+//    border-bottom: solid 1px $red !important;
+//    border-right: solid 1px $red !important;
+//    border-left: solid 1px $red !important;
+//    background: lighten($light-red, 20%);
+//    animation: tiny-wiggle 3 100ms;
+//  }
+//
+//  &.success {
+//    border-top: solid 1px $green !important;
+//    border-bottom: solid 1px $green !important;
+//    border-right: solid 1px $green !important;
+//    border-left: solid 1px $green !important;
+//    background: lighten($light-green, 20%);
+//  //animation: tiny-wiggle 3 100ms;
+//  }
+//}
+
+.bi-check-lg {
+  color: $green;
+}
+
+.bi-exclamation-lg {
+  color: $red;
+}
+
+.bi-exclamation-lg, .bi-check-lg {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 25px;
+  position: relative;
+  right: 15px;
+  width: 0;
+  animation: wiggle 10 100ms;
+  height: 41px;
+}
+
+.tiny-wiggle {
+  animation: ring 2.5s infinite;
+}
+
+@keyframes ring {
+  10% { rotate: 1deg; transform: translateX(2px) }
+  13% { rotate: -1deg; transform: translateX(-2px) }
+  16% { rotate: 1deg; transform: translateX(2px) }
+  19% { rotate: -1deg; transform: translateX(-2px) }
+  22% { rotate: -1deg; transform: translateX(2px) }
+  25% { rotate: -1deg; transform: translateX(-2px) }
+  28% { rotate: -1deg; transform: translateX(2px) }
+  31% { rotate: 0deg }
+}
+
+@keyframes tiny-wiggle {
+  10% {
+    rotate: 1deg
+  }
+  100% {
+    rotate: -1deg
+  }
+}
+
+@keyframes wiggle {
+  10% {
+    rotate: 10deg
+  }
+  100% {
+    rotate: -10deg
+  }
+}
+
+@media (max-width: 512px) {
+  input {
+    padding-left: 5px;
+  }
+  input::placeholder {
+    font-size: 12px;
+  }
+}
