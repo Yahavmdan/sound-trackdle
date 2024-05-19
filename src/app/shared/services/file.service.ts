@@ -8,7 +8,7 @@ import { File } from "../types/file.type";
 })
 export class FileService {
 
-    private readonly baseUrl: string = 'http://localhost:80/api/';
+    private readonly baseUrl: string = 'https://sound-trackdle-api-production.up.railway.app/api/';
 
     constructor(private http: HttpClient) {
     }
