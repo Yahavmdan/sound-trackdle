@@ -32,7 +32,7 @@
   <audio *ngIf="audioBlobUrl" class="my-2" controls>
     <source [src]="audioBlobUrl" type="audio/mpeg">
   </audio>
-  <div *ngIf="isLost">No more guesses! the movie was <span class="fw-700 f-24 text-red">{{ file?.name | titlecase }}!</span> better luck next time.</div>
+  <div *ngIf="isLost">No more guesses! the movie was <span class="fw-700 f-24 text-red">{{ file.name | titlecase }}!</span> better luck next time.</div>
   <mat-form-field class="my-2">
     <mat-label>Movie</mat-label>
     <input type="text" matInput [matAutocomplete]="auto" [formControl]="myControl" #input>
