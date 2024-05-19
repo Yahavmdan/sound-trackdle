@@ -1,13 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { MovieService } from "../../shared/services/movie.service";
-import { AsyncPipe, NgClass, NgForOf, NgIf } from "@angular/common";
+import { FileService } from "../../shared/services/file.service";
+import { AsyncPipe, NgClass, NgForOf, NgIf, TitleCasePipe } from "@angular/common";
 import { MatFormField, MatFormFieldModule } from "@angular/material/form-field";
-import {
-    MatAutocomplete,
-    MatAutocompleteModule,
-    MatAutocompleteTrigger,
-    MatOption
-} from "@angular/material/autocomplete";
+import { MatAutocomplete, MatAutocompleteModule, MatAutocompleteTrigger, MatOption } from "@angular/material/autocomplete";
 import { MatInput, MatInputModule } from "@angular/material/input";
 import { FormControl, FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { map, Observable, startWith } from "rxjs";
@@ -16,187 +11,175 @@ import { File } from "../../shared/types/file.type";
 import { ThemeService } from "../../shared/services/theme.service";
 
 @Component({
-    selector: 'app-home',
-    templateUrl: './home.component.html',
-    styleUrl: './home.component.scss',
-    imports: [
-        NgIf, NgForOf, MatFormField, MatAutocomplete, MatAutocompleteTrigger, MatInput, MatOption, AsyncPipe,
-        ReactiveFormsModule, FormsModule, MatFormFieldModule, MatInputModule, MatAutocompleteModule, NgClass
-    ],
-    standalone: true,
-    animations: [
-        fade('fade', 500),
-        glideY('glide', -50, 200)
-    ]
+  selector: 'app-home',
+  templateUrl: './home.component.html',
+  styleUrl: './home.component.scss',
+  imports: [
+    NgIf, NgForOf, MatFormField, MatAutocomplete, MatAutocompleteTrigger, MatInput, MatOption, AsyncPipe,
+    ReactiveFormsModule, FormsModule, MatFormFieldModule, MatInputModule, MatAutocompleteModule, NgClass, TitleCasePipe
+  ],
+  standalone: true,
+  animations: [
+    fade('fade', 500),
+    glideY('glide', -50, 200)
+  ]
 })
 
 export class HomeComponent implements OnInit {
-    audioBlob: Blob | null = null;
-    audioBlobUrl: string | null = null;
-    errorMessage: string = '';
-    movies: File[] = [];
-    myControl = new FormControl('');
-    filteredOptions: Observable<{ name: string }[]> | undefined;
-    isGuide: boolean = false;
-    hints: string[] = [];
-    isLost: boolean = false;
-    isSuccess: boolean = false;
-    isError: boolean = false;
-    isDarkMode: boolean | undefined;
-    step: number = 1;
-    file: File | undefined;
+  audioBlob: Blob | null = null;
+  audioBlobUrl: string | null = null;
+  errorMessage: string = '';
+  movies: File[] = [];
+  myControl = new FormControl('');
+  filteredOptions!: Observable<{ name: string, id: number }[]>;
+  isGuide: boolean = false;
+  hints: string[] = [];
+  isLost: boolean = false;
+  isSuccess: boolean = false;
+  isError: boolean = false;
+  isDarkMode!: boolean;
+  step: number = 0;
+  file!: File;
 
+  constructor(private _movieService: FileService,
+              public themeService: ThemeService) {
+  }
 
-    constructor(private movieService: MovieService,
-                public themeService: ThemeService) {
-    }
+  ngOnInit(): void {
+    this._getMovies();
+    this._listenToInput();
+    this._listenToTheme();
+  }
 
-    ngOnInit(): void {
-        this.getMovies();
-        this.listenToInput();
-        this.listenToTheme();
-    }
-
-    public getFile(): void {
+  public getFile(): void {
+    this.audioBlobUrl = null;
+    this._movieService.getFile().subscribe({
+      next: (file: File) => {
+        this.file = file;
+        this._movieService.streamFile(this.file.id).subscribe({
+          next: (res: Blob) => {
+            this.audioBlob = res;
+            this.audioBlobUrl = URL.createObjectURL(this.audioBlob);
+            this.errorMessage = '';
+          },
+          error: () => {
+            this.errorMessage = 'File not found';
+            this.audioBlob = null;
+            this.audioBlobUrl = null;
+          }
+        });
+      },
+      error: () => {
+        this.errorMessage = 'File not found';
+        this.audioBlob = null;
         this.audioBlobUrl = null;
-        this.movieService.getFile().subscribe({
-            next: (data: File) => {
-                this.movieService.streamFile(data.file_path).subscribe({
-                    next: (res: Blob) => {
-                        console.log(res)
-                        this.audioBlob = res;
-                        this.audioBlobUrl = URL.createObjectURL(this.audioBlob);
-                        this.errorMessage = '';
-                    },
-                    error: () => {
-                        this.errorMessage = 'File not found';
-                        this.audioBlob = null;
-                        this.audioBlobUrl = null;
-                    }
-                });
-            },
-            error: () => {
-                this.errorMessage = 'File not found';
-                this.audioBlob = null;
-                this.audioBlobUrl = null;
-            }
-        });
-    }
+      }
+    });
+  }
 
-    private listenToTheme(): void {
-        this.themeService.isDarkMode$.subscribe((isDarkMode) => {
-            this.isDarkMode = isDarkMode;
-        });
-    }
+  private _listenToTheme(): void {
+    this.themeService.isDarkMode$.subscribe((isDarkMode) => {
+      this.isDarkMode = isDarkMode;
+    });
+  }
 
-    private getMovies(): void {
-        this.movieService.index().subscribe(res => {
-            this.movies = res.movies;
-            this.getFile();
-        });
-    }
+  private _getMovies(): void {
+    this._movieService.index().subscribe(res => {
+      this.movies = res;
+      this.getFile();
+    });
+  }
 
-    public toggleMode(): void {
-        this.themeService.toggleMode();
-    }
+  public toggleMode(): void {
+    this.themeService.toggleMode();
+  }
 
-    private listenToInput(): void {
-        this.filteredOptions = this.myControl.valueChanges.pipe(
-            startWith(''),
-            map(value => this._filter(value || '')),
-        );
-    }
+  private _listenToInput(): void {
+    this.filteredOptions = this.myControl.valueChanges.pipe(
+      startWith(' '),
+      map((value: any) => typeof value === 'string' ? value : value.name),
+      map(name => name ? this._filter(name) : this.movies.slice())
+    );
+  }
 
-    private _filter(value: string): { name: string }[] {
-        const filterValue = value.toLowerCase();
-        return this.movies.filter(movie => movie.name.toLowerCase().includes(filterValue));
-    }
+  private _filter(name: string): File[] {
+    const filterValue = name.toLowerCase();
+    return this.movies.filter(movie => movie.name.toLowerCase().includes(filterValue));
+  }
 
-    public submit(input: HTMLInputElement): void {
-        if (!input || !input.value) return;
-        if (this.isLost) return;
-        // if (!this.level) {
-        //   this.alterElements(false, input);
-        //   return;
-        // }
-        this.step++;
-        this.failSteps(input);
-    }
+  public onMovieSelected(selectedMovieId: number, input: HTMLInputElement) {
+    const selectedMovie = this.movies.find(movie => movie.id === selectedMovieId);
+    if (selectedMovie) this._submit(input);
+  }
 
-    private alterElements(success: boolean, input: HTMLInputElement): void {
-        // @ts-ignore
-        input.nextElementSibling.classList.remove('d-none');
-        // @ts-ignore
-        input.nextElementSibling.classList.add(success ? 'bi-check-lg' : 'bi-exclamation-lg');
-        input.classList.add(success ? 'success' : 'error');
-        setTimeout(() => {
-            // @ts-ignore
-            input.nextElementSibling.classList.add('d-none');
-            // @ts-ignore
-            input.nextElementSibling.classList.remove(success ? 'bi-check-lg' : 'bi-exclamation-lg');
-            input.classList.remove(success ? 'success' : 'error');
-            this.isSuccess = false;
-        }, success ? 10000 : 500)
-    }
+  private _submit(input: HTMLInputElement): void {
+    if (this.isLost) return;
+    if (this._checkAnswer(input)) return;
+    this.step++;
+    this._failSteps();
+  }
 
-    private failSteps(input?: HTMLInputElement): void {
-        if (input) {
-            if (this.checkAnswer(input)) return;
 
-            this.alterElements(false, input);
-        }
-        switch (this.step) {
-            case 1:
-                this.hints.push(`The word contains letters.`);
-                break;
-            case 2:
-                this.hints.push(`The first letter is`);
-                break;
-            case 3:
-                this.hints.push(`The word has} syllables`);
-                break;
-            case 4:
-                this.hints.push(`The word is a type of: `);
-                break;
-            case 5:
-                this.hints.push(`The word can be used in a sentence like this: `);
-                break;
-            case 6:
-                this.revelFile();
-                break;
-        }
-    }
+  private _alterElements(success: boolean, input: HTMLInputElement): void {
+    // @ts-ignore
+    input.nextElementSibling.classList.remove('d-none');
+    // @ts-ignore
+    input.nextElementSibling.classList.add(success ? 'bi-check-lg' : 'bi-exclamation-lg');
+    input.classList.add(success ? 'success' : 'error');
+    setTimeout(() => {
+      // @ts-ignore
+      input.nextElementSibling.classList.add('d-none');
+      // @ts-ignore
+      input.nextElementSibling.classList.remove(success ? 'bi-check-lg' : 'bi-exclamation-lg');
+      input.classList.remove(success ? 'success' : 'error');
+      this.isSuccess = false;
+    }, success ? 10000 : 500)
+  }
 
-    private checkAnswer(input: HTMLInputElement): boolean {
-        if (input.value.toLowerCase() === 'right answer') {
-            input.value = '';
-            this.handleSuccess(input);
-            return true;
-        }
-        input.value = '';
-        return false;
+  private _failSteps(): void {
+    switch (this.step) {
+      case 1: this.hints.push(`The main actor of this movie is - ${this.file?.main_actor}`);
+        break;
+      case 2: this.hints.push(`The movie was released at - ${this.file?.year}`);
+        break;
+      case 3: this.hints.push(`Here's a short plot for this movie: ${this.file?.plot}`);
+        break;
+      case 4: this._revelFile();
+        break;
     }
+  }
 
-    private reset(moveLevel: boolean, input?: HTMLInputElement): void {
-        if (input && moveLevel) {
-            input.value = '';
-        }
-        this.isLost = false;
-        this.step = 0;
-        this.hints = [];
-        this.isSuccess = false;
-        this.isError = false;
+  private _checkAnswer(input: HTMLInputElement): boolean {
+    if (input.value === this.file?.id?.toString()) {
+      input.value = '';
+      this._handleSuccess(input);
+      return true;
     }
+    input.value = '';
+    return false;
+  }
 
-    private handleSuccess(input: HTMLInputElement): void {
-        this.reset(false);
-        this.alterElements(true, input);
-        this.isSuccess = true;
-    }
+  private _handleSuccess(input: HTMLInputElement): void {
+    this._reset();
+    this._alterElements(true, input);
+    this.isSuccess = true;
+  }
 
-    private revelFile(): void {
-        this.reset(false);
-        this.isLost = true;
+  private _revelFile(): void {
+    this._reset();
+    this._movieService.getFileById(this.file.id)
+      .subscribe((res: File) => this.file.name = res.name);
+    this.isLost = true;
+  }
+
+  private _reset(input?: HTMLInputElement): void {
+    if (input) {
+      input.value = '';
     }
+    this.isLost = false;
+    this.step = 0;
+    this.hints = [];
+    this.isSuccess = false;
+    this.isError = false;
+  }
 }
-

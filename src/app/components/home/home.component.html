@@ -21,33 +21,27 @@
   <i class="bi bi-file-earmark-music-fill f-80 mt-5"></i>
   <div class="f-24 f-sm-16 fw-700 col-6 text-center my-2">Sound Trackdle</div>
   <i (click)="isGuide = !isGuide" class="bi bi-info-circle text-blue my-1 pointer"></i>
-  <p *ngIf="isGuide" @fade @glide class="col-10 col-sm-5 text-center f-14 f-sm-12 text-blue">Every day a soundtrack will be given, you need to guess djhf dsfjh sdjh
-  kjshdf kjshd kjshd fkjhsd kjfnfn4nflksdn veliudhjv bdk dlidefh f3roud jdnfdlj</p>
-  <div class="d-flex flex-wrap col-12 col-sm-6">
+  <p *ngIf="isGuide" @fade @glide class="col-10 col-sm-5 text-center f-14 f-sm-12 text-blue">Every day a different soundtrack from a movie will be provided,
+  you need to guess what is the movie this soundtrack is from. you have 3 guesses. for each failure you'll be given a hint.</p>
+  <div class="d-flex flex-wrap">
     <div @fade @glide *ngFor="let hint of hints;" class="d-flex justify-content-start">
       <i class="bi bi-lightbulb-fill text-yellow mx-2"></i>
       <span class="fw-700">{{ hint }}</span>
     </div>
   </div>
-  <audio *ngIf="audioBlobUrl" controls>
+  <audio *ngIf="audioBlobUrl" class="my-2" controls>
     <source [src]="audioBlobUrl" type="audio/mpeg">
   </audio>
-  <div *ngIf="isLost">No more guesses! the word was <span class="fw-700 f-24 text-red">{{ 'put here the currect answer' }}!</span> better luck next time.</div>
-  <mat-form-field class="example-full-width">
-    <input type="text"
-           #input
-           placeholder="I know!"
-           matInput
-           [formControl]="myControl"
-           [matAutocomplete]="auto">
-    <mat-autocomplete #auto="matAutocomplete">
-      <mat-option *ngFor="let movie of filteredOptions | async" [value]="movie.name">
+  <div *ngIf="isLost">No more guesses! the movie was <span class="fw-700 f-24 text-red">{{ file?.name | titlecase }}!</span> better luck next time.</div>
+  <mat-form-field class="my-2">
+    <mat-label>Movie</mat-label>
+    <input type="text" matInput [matAutocomplete]="auto" [formControl]="myControl" #input>
+    <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onMovieSelected($event.option.value, input)">
+      <mat-option *ngFor="let movie of filteredOptions | async" [value]="movie.id">
         {{ movie.name }}
       </mat-option>
     </mat-autocomplete>
   </mat-form-field>
-  <button type="submit" (click)="submit(input)">Go!</button>
-
 
   <div *ngIf="isSuccess" [ngClass]="isSuccess ? 'many-confetti' : ''">
     <div class="confetti"></div>

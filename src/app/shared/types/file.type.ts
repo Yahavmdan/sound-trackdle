@@ -3,6 +3,7 @@ export type File = {
   name: string;
   year: number;
   file_path?: string;
-  is_recently_played: number;
+  main_actor?: string;
+  plot?: string;
   type: 'movie';
 }
