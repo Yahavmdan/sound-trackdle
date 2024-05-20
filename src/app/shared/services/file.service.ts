@@ -29,8 +29,8 @@ export class FileService extends BaseService {
     return this.http.post<File>(this.baseUrl + 'file/id', {id});
   }
 
-  public streamFile(id?: number): Observable<Blob> {
-    return this.http.post(this.baseUrl + 'stream', {id}, {responseType: 'blob'});
+  public streamFile(id: number): Observable<{ path: string }> {
+    return this.http.post<{ path: string }>(this.baseUrl + 'stream', {id});
   }
 
 }

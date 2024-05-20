@@ -14,7 +14,6 @@ import { map, Observable, startWith } from "rxjs";
 import { fade, glideY } from "../../shared/utilities/animations";
 import { File } from "../../shared/types/file.type";
 import { ThemeService } from "../../shared/services/theme.service";
-
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
@@ -32,7 +31,7 @@ import { ThemeService } from "../../shared/services/theme.service";
 
 export class HomeComponent implements OnInit {
   audioBlob: Blob | null = null;
-  audioBlobUrl: string | null = null;
+  audioBlobUrl!: string | null;
   errorMessage: string = '';
   movies: File[] = [];
   myControl = new FormControl('');
@@ -45,7 +44,9 @@ export class HomeComponent implements OnInit {
   isDarkMode!: boolean;
   step: number = 0;
   file!: File;
-  selectedFile: File | null = null;
+  selectedFile = null;
+  public environment = environment;
+
 
   constructor(private _movieService: FileService,
               public themeService: ThemeService) {
@@ -63,9 +64,8 @@ export class HomeComponent implements OnInit {
       next: (file: File) => {
         this.file = file;
         this._movieService.streamFile(this.file.id).subscribe({
-          next: (res: Blob) => {
-            this.audioBlob = res;
-            this.audioBlobUrl = URL.createObjectURL(this.audioBlob);
+          next: (res: { path: string }) => {
+            this.audioBlobUrl = res.path;
             this.errorMessage = '';
           },
           error: () => {
@@ -202,7 +202,7 @@ export class HomeComponent implements OnInit {
     }
 
     const formData = new FormData();
-    formData.append('file', this.selectedFile.name);
+    formData.append('file', this.selectedFile);
 
     this._movieService.upload(formData)
       .subscribe({
@@ -217,6 +217,9 @@ export class HomeComponent implements OnInit {
   }
 
   public onFileSelected(event: any) {
-    this.selectedFile = event.target.files[0] as File;
+    this.selectedFile = event.target.files[0];
   }
+
 }
+
+import { environment } from "../../../environments/environment";
