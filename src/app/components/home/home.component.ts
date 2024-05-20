@@ -2,7 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { FileService } from "../../shared/services/file.service";
 import { AsyncPipe, NgClass, NgForOf, NgIf, TitleCasePipe } from "@angular/common";
 import { MatFormField, MatFormFieldModule } from "@angular/material/form-field";
-import { MatAutocomplete, MatAutocompleteModule, MatAutocompleteTrigger, MatOption } from "@angular/material/autocomplete";
+import {
+  MatAutocomplete,
+  MatAutocompleteModule,
+  MatAutocompleteTrigger,
+  MatOption
+} from "@angular/material/autocomplete";
 import { MatInput, MatInputModule } from "@angular/material/input";
 import { FormControl, FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { map, Observable, startWith } from "rxjs";
@@ -40,6 +45,7 @@ export class HomeComponent implements OnInit {
   isDarkMode!: boolean;
   step: number = 0;
   file!: File;
+  selectedFile: File | null = null;
 
   constructor(private _movieService: FileService,
               public themeService: ThemeService) {
@@ -138,13 +144,17 @@ export class HomeComponent implements OnInit {
 
   private _failSteps(): void {
     switch (this.step) {
-      case 1: this.hints.push(`The main actor of this movie is - ${this.file?.main_actor}`);
+      case 1:
+        this.hints.push(`The main actor of this movie is - ${this.file?.main_actor}`);
         break;
-      case 2: this.hints.push(`The movie was released at - ${this.file?.year}`);
+      case 2:
+        this.hints.push(`The movie was released at - ${this.file?.year}`);
         break;
-      case 3: this.hints.push(`Here's a short plot for this movie: ${this.file?.plot}`);
+      case 3:
+        this.hints.push(`Here's a short plot for this movie: ${this.file?.plot}`);
         break;
-      case 4: this._revelFile();
+      case 4:
+        this._revelFile();
         break;
     }
   }
@@ -181,5 +191,32 @@ export class HomeComponent implements OnInit {
     this.hints = [];
     this.isSuccess = false;
     this.isError = false;
+  }
+
+  public onSubmit() {
+    console.log('wow')
+
+    if (!this.selectedFile) {
+      console.error('No file selected');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', this.selectedFile.name);
+
+    this._movieService.upload(formData)
+      .subscribe({
+        next: (response) => {
+          console.log(response);
+          console.log('File uploaded successfully');
+        },
+        error: (error) => {
+          console.error('Error uploading file:', error);
+        }
+      });
+  }
+
+  public onFileSelected(event: any) {
+    this.selectedFile = event.target.files[0] as File;
   }
 }

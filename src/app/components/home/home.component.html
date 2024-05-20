@@ -1,14 +1,7 @@
-<!--<form class="px-4 d-flex flex-column h-100 justify-content-center" >-->
-<!--    <input type="file" (change)="onFileSelected($event)" accept=".mp3">-->
-<!--    <button (click)="onSubmit()" type="button">Upload</button>-->
-
-<!--    <input #input type="text" placeholder="Enter file name">-->
-<!--    <button (click)="getTrack(input.value)" type="button">Play</button>-->
-<!--    <audio *ngIf="audioBlobUrl" controls>-->
-<!--        <source [src]="audioBlobUrl" type="audio/mpeg">-->
-<!--    </audio>-->
-<!--    <div *ngIf="errorMessage">{{ errorMessage }}</div>-->
-<!--</form>-->
+<form class="px-4 d-flex flex-column h-100 justify-content-center" >
+    <input type="file" (change)="onFileSelected($event)" accept=".mp3">
+    <button (click)="onSubmit()" type="button">Upload</button>
+</form>
 
 <div class="h-50px position-fixed">
   <div class="w-50px h-50px d-flex justify-content-center align-items-center">
