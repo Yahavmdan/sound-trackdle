@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from "rxjs";
 import { File } from "../types/file.type";
 import { BaseService } from "./base.service";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +18,7 @@ export class FileService extends BaseService {
   }
 
   public upload(formData: FormData): Observable<any> {
-    return this.http.post(this.baseUrl + 'upload', formData);
+    return this.http.post(this.baseUrl + 'upload', formData, {headers: this.getHeaders()});
   }
 
   public getFile(): Observable<File> {

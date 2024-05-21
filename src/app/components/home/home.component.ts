@@ -14,6 +14,7 @@ import { map, Observable, startWith } from "rxjs";
 import { fade, glideY } from "../../shared/utilities/animations";
 import { File } from "../../shared/types/file.type";
 import { ThemeService } from "../../shared/services/theme.service";
+import { AuthService } from "../../shared/services/auth.service";
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
@@ -42,14 +43,16 @@ export class HomeComponent implements OnInit {
   isSuccess: boolean = false;
   isError: boolean = false;
   isDarkMode!: boolean;
+  isForm: boolean = false;
   step: number = 0;
   file!: File;
   selectedFile = null;
-  public environment = environment;
+  token!: string | null;
 
 
   constructor(private _movieService: FileService,
-              public themeService: ThemeService) {
+              public themeService: ThemeService,
+              private _authService: AuthService) {
   }
 
   ngOnInit(): void {
@@ -65,6 +68,7 @@ export class HomeComponent implements OnInit {
         this.file = file;
         this._movieService.streamFile(this.file.id).subscribe({
           next: (res: { path: string }) => {
+            console.log(res.path)
             this.audioBlobUrl = res.path;
             this.errorMessage = '';
           },
@@ -139,7 +143,7 @@ export class HomeComponent implements OnInit {
       input.nextElementSibling.classList.remove(success ? 'bi-check-lg' : 'bi-exclamation-lg');
       input.classList.remove(success ? 'success' : 'error');
       this.isSuccess = false;
-    }, success ? 10000 : 500)
+    }, success ? 5000 : 500)
   }
 
   private _failSteps(): void {
@@ -220,6 +224,11 @@ export class HomeComponent implements OnInit {
     this.selectedFile = event.target.files[0];
   }
 
+  public login(username: string, password: string): void {
+    if (!username || !password) return;
+    this._authService.login({username, password}).subscribe(res => {
+      this.token = res.token;
+      localStorage.setItem('token', this.token);
+    })
+  }
 }
-
-import { environment } from "../../../environments/environment";
