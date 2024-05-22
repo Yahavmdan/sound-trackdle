@@ -40,10 +40,8 @@
   <div *ngIf="isLost && file.name">No more guesses! the movie was <span class="fw-700 f-24 text-red">{{ file.name + '!' | titlecase }}</span> better luck next time.</div>
   <div class="d-flex">
     <input (focus)="focusInput()"
-           id = "wow"
            placeholder="Guess the movie"
            type="text"
-           matInput
            [matAutocomplete]="auto"
            [formControl]="myControl"
            #input>

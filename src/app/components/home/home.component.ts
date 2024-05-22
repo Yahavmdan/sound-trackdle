@@ -1,29 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { FileService } from "../../shared/services/file.service";
 import { AsyncPipe, NgClass, NgForOf, NgIf, TitleCasePipe } from "@angular/common";
-import { MatFormField, MatFormFieldModule } from "@angular/material/form-field";
-import {
-  MatAutocomplete,
-  MatAutocompleteModule,
-  MatAutocompleteTrigger,
-  MatOption
-} from "@angular/material/autocomplete";
-import { MatInput, MatInputModule } from "@angular/material/input";
-import { FormControl, FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { MatAutocompleteModule } from "@angular/material/autocomplete";
+import { FormControl, ReactiveFormsModule } from "@angular/forms";
 import { map, Observable, startWith } from "rxjs";
 import { fade, glideY } from "../../shared/utilities/animations";
 import { File } from "../../shared/types/file.type";
 import { ThemeService } from "../../shared/services/theme.service";
 import { AuthService } from "../../shared/services/auth.service";
+import { environment } from "../../../environments/environment";
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { firebaseConfig } from "../../../environments/environment.prod";
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
-  imports: [
-    NgIf, NgForOf, MatFormField, MatAutocomplete, MatAutocompleteTrigger, MatInput, MatOption, AsyncPipe,
-    ReactiveFormsModule, FormsModule, MatFormFieldModule, MatInputModule, MatAutocompleteModule, NgClass, TitleCasePipe
-  ],
+  imports: [NgIf, NgForOf,NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule],
   standalone: true,
   animations: [
     fade('fade', 500),
@@ -32,25 +26,23 @@ import { AuthService } from "../../shared/services/auth.service";
 })
 
 export class HomeComponent implements OnInit {
-  audioBlob: Blob | null = null;
-  audioBlobUrl!: string | null;
-  errorMessage: string = '';
-  movies: File[] = [];
-  myControl = new FormControl('');
-  filteredOptions!: Observable<{ name: string, id: number }[]>;
-  isGuide: boolean = false;
-  hints: string[] = [];
-  isLost: boolean = false;
-  isSuccess: boolean = false;
-  isError: boolean = false;
-  isDarkMode!: boolean;
-  isForm: boolean = false;
-  isLoading: boolean = false;
-  step: number = 0;
-  file!: File;
-  files!: File[];
-  selectedFile = null;
-  token!: string | null;
+  public audioBlobUrl!: string | null;
+  public myControl = new FormControl('');
+  public filteredOptions!: Observable<{ name: string, id: number }[]>;
+  public hints: string[] = [];
+  public file!: File;
+  public files!: File[];
+  public token!: string | null;
+  public isGuide: boolean = false;
+  public isLost: boolean = false;
+  public isSuccess: boolean = false;
+  public isDarkMode!: boolean;
+  public isForm: boolean = false;
+  public isLoading: boolean = false;
+
+  private _step: number = 0;
+  private _selectedFile = null;
+  private _movies: File[] = [];
 
 
   constructor(private _movieService: FileService,
@@ -62,6 +54,13 @@ export class HomeComponent implements OnInit {
     this._getMovies();
     this._listenToInput();
     this._listenToTheme();
+    this._initializeAnalytics();
+  }
+
+  private _initializeAnalytics(): void {
+    environment.production
+      ? getAnalytics(initializeApp(firebaseConfig))
+      : null;
   }
 
   public getRecentFiles(): void {
@@ -73,13 +72,12 @@ export class HomeComponent implements OnInit {
 
   public getFile(id?: number): void {
     if (id) {
-      this.audioBlob = null;
       this.audioBlobUrl = null;
     }
     this._reset();
     this._movieService.getFile().subscribe({
       next: (file: File) => this._handleFileRetrieval(file, id),
-      error: () => this._handleError('File not found')
+      error: () => this._handleError()
     });
   }
 
@@ -97,20 +95,17 @@ export class HomeComponent implements OnInit {
     this.isLoading = true;
     this._movieService.streamFile(id).subscribe({
       next: (res: { path: string }) => this._handleStreamSuccess(res),
-      error: () => this._handleError('File not found')
+      error: () => this._handleError()
     });
   }
 
   private _handleStreamSuccess(res: { path: string }): void {
     this.isLoading = false;
     this.audioBlobUrl = res.path;
-    this.errorMessage = '';
   }
 
-  private _handleError(message: string): void {
+  private _handleError(): void {
     this.isLoading = false;
-    this.errorMessage = message;
-    this.audioBlob = null;
     this.audioBlobUrl = null;
   }
 
@@ -122,7 +117,7 @@ export class HomeComponent implements OnInit {
 
   private _getMovies(): void {
     this._movieService.index().subscribe(res => {
-      this.movies = res;
+      this._movies = res;
       this.getFile();
     });
   }
@@ -139,24 +134,24 @@ export class HomeComponent implements OnInit {
     this.filteredOptions = this.myControl.valueChanges.pipe(
       startWith(''),
       map((value: any) => typeof value === 'string' ? value : value.name),
-      map(name => name ? this._filter(name) : this.movies.slice())
+      map(name => name ? this._filter(name) : this._movies.slice())
     );
   }
 
   private _filter(name: string): File[] {
     const filterValue = name.toLowerCase();
-    return this.movies.filter(movie => movie.name.toLowerCase().includes(filterValue));
+    return this._movies.filter(movie => movie.name.toLowerCase().includes(filterValue));
   }
 
   public onMovieSelected(selectedMovieId: number, input: HTMLInputElement) {
-    const selectedMovie = this.movies.find(movie => movie.id === selectedMovieId);
+    const selectedMovie = this._movies.find(movie => movie.id === selectedMovieId);
     if (selectedMovie) this._submit(input);
   }
 
   private _submit(input: HTMLInputElement): void {
     if (this.isLost) return;
     if (this._checkAnswer(input)) return;
-    this.step++;
+    this._step++;
     this._failSteps();
   }
 
@@ -181,7 +176,7 @@ export class HomeComponent implements OnInit {
   }
 
   private _failSteps(): void {
-    switch (this.step) {
+    switch (this._step) {
       case 1:
         this.hints.push(`The main actor of this movie is - ${this.file?.main_actor}`);
         break;
@@ -229,20 +224,19 @@ export class HomeComponent implements OnInit {
       }, 5000)
     }
     this.isLost = false;
-    this.step = 0;
+    this._step = 0;
     this.hints = [];
     this.isSuccess = false;
-    this.isError = false;
   }
 
   public onSubmit() {
-    if (!this.selectedFile) {
+    if (!this._selectedFile) {
       console.error('No file selected');
       return;
     }
 
     const formData = new FormData();
-    formData.append('file', this.selectedFile);
+    formData.append('file', this._selectedFile);
 
     this._movieService.upload(formData)
       .subscribe({
@@ -257,7 +251,7 @@ export class HomeComponent implements OnInit {
   }
 
   public onFileSelected(event: any) {
-    this.selectedFile = event.target.files[0];
+    this._selectedFile = event.target.files[0];
   }
 
   public login(username: string, password: string): void {
