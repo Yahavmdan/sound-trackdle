@@ -25,6 +25,10 @@ export class FileService extends BaseService {
     return this.http.get<File>(this.baseUrl + 'file');
   }
 
+  public getRecentFiles(): Observable<File[]> {
+    return this.http.get<File[]>(this.baseUrl + 'files');
+  }
+
   public getFileById(id: number): Observable<File> {
     return this.http.post<File>(this.baseUrl + 'file/id', {id});
   }

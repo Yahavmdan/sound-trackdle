@@ -4,6 +4,7 @@ export type File = {
   year: number;
   file_path?: string;
   main_actor?: string;
+  played_at?: string;
   plot?: string;
   type: 'movie';
 }

@@ -1,4 +1,4 @@
-<button (click)="isForm = !isForm">login</button>
+<button class="login-btn" (click)="isForm = !isForm">login</button>
 <form *ngIf="isForm" class="d-flex">
    <title>Login</title>
   <p>user name</p>
@@ -25,36 +25,49 @@
   <i (click)="isGuide = !isGuide" class="bi bi-info-circle text-blue my-1 pointer"></i>
   <p *ngIf="isGuide" @fade @glide class="col-10 col-sm-5 text-center f-14 f-sm-12 text-blue">Every day a different soundtrack from a movie will be provided,
   you need to guess what is the movie this soundtrack is from. you have 3 guesses. for each failure you'll be given a hint.</p>
-  <div class="d-flex flex-wrap">
-    <div @fade @glide *ngFor="let hint of hints;" class="d-flex justify-content-start">
+  <div class="d-flex flex-wrap col-12 col-sm-6 col-md-4 justify-content-center">
+    <div @fade @glide *ngFor="let hint of hints;" class="d-flex flex-column align-items-center">
       <i class="bi bi-lightbulb-fill text-yellow mx-2"></i>
-      <span class="fw-700">{{ hint }}</span>
+      <span class="fw-500 text-center">{{ hint }}</span>
     </div>
   </div>
-  <audio *ngIf="audioBlobUrl" class="my-2" controls>
+  <audio @fade *ngIf="audioBlobUrl" class="my-2" controls>
     <source [src]="audioBlobUrl" type="audio/mpeg">
   </audio>
+  <div @fade *ngIf="isLoading" class="spinner-border" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
   <div *ngIf="isLost && file.name">No more guesses! the movie was <span class="fw-700 f-24 text-red">{{ file.name + '!' | titlecase }}</span> better luck next time.</div>
-  <mat-form-field class="my-2">
-    <mat-label>Movie</mat-label>
-    <input type="text" matInput [matAutocomplete]="auto" [formControl]="myControl" #input>
+  <div class="d-flex">
+    <input (focus)="focusInput()"
+           id = "wow"
+           placeholder="Guess the movie"
+           type="text"
+           matInput
+           [matAutocomplete]="auto"
+           [formControl]="myControl"
+           #input>
+    <i class="bi"></i>
+  </div>
     <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onMovieSelected($event.option.value, input)">
       <mat-option *ngFor="let movie of filteredOptions | async" [value]="movie.id">
         {{ movie.name }}
       </mat-option>
     </mat-autocomplete>
-  </mat-form-field>
 
   <div *ngIf="isSuccess" [ngClass]="isSuccess ? 'many-confetti' : ''">
-    <div class="confetti"></div>
-    <div class="confetti"></div>
-    <div class="confetti"></div>
-    <div class="confetti"></div>
-    <div class="confetti"></div>
-    <div class="confetti"></div>
-    <div class="confetti"></div>
-    <div class="confetti"></div>
+    <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
+    <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
     <div class="confetti"></div>
   </div>
   <h3 *ngIf="isSuccess" class="text-green">Wow! good job!</h3>
+  <button class="button-layout" (click)="getRecentFiles()">Play recent challenges</button>
+  <div class="d-flex flex-column flex-wrap card-wrapper my-2" @fade @glide *ngIf="files?.length">
+    <div class="m-2" *ngFor="let file of files">
+      <div class="pointer" (click)="getFile(file.id)">
+        <i class="bi bi-film mx-1"></i>
+        <i class="f-14 mx-1">{{ file.played_at }}</i>
+      </div>
+    </div>
+  </div>
 </div>

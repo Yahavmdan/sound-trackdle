@@ -15,6 +15,7 @@ import { fade, glideY } from "../../shared/utilities/animations";
 import { File } from "../../shared/types/file.type";
 import { ThemeService } from "../../shared/services/theme.service";
 import { AuthService } from "../../shared/services/auth.service";
+
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
@@ -44,8 +45,10 @@ export class HomeComponent implements OnInit {
   isError: boolean = false;
   isDarkMode!: boolean;
   isForm: boolean = false;
+  isLoading: boolean = false;
   step: number = 0;
   file!: File;
+  files!: File[];
   selectedFile = null;
   token!: string | null;
 
@@ -61,30 +64,54 @@ export class HomeComponent implements OnInit {
     this._listenToTheme();
   }
 
-  public getFile(): void {
-    this.audioBlobUrl = null;
+  public getRecentFiles(): void {
+    if (this.files?.length) return;
+    this._movieService.getRecentFiles().subscribe(res => {
+      this.files = res;
+    })
+  }
+
+  public getFile(id?: number): void {
+    if (id) {
+      this.audioBlob = null;
+      this.audioBlobUrl = null;
+    }
+    this._reset();
     this._movieService.getFile().subscribe({
-      next: (file: File) => {
-        this.file = file;
-        this._movieService.streamFile(this.file.id).subscribe({
-          next: (res: { path: string }) => {
-            console.log(res.path)
-            this.audioBlobUrl = res.path;
-            this.errorMessage = '';
-          },
-          error: () => {
-            this.errorMessage = 'File not found';
-            this.audioBlob = null;
-            this.audioBlobUrl = null;
-          }
-        });
-      },
-      error: () => {
-        this.errorMessage = 'File not found';
-        this.audioBlob = null;
-        this.audioBlobUrl = null;
-      }
+      next: (file: File) => this._handleFileRetrieval(file, id),
+      error: () => this._handleError('File not found')
     });
+  }
+
+  private _handleFileRetrieval(file: File, id?: number): void {
+    if (id) {
+      this._getFileById(false, id);
+      this._stream(id);
+      return;
+    }
+    this.file = file;
+    this._stream(this.file.id);
+  }
+
+  private _stream(id: number): void {
+    this.isLoading = true;
+    this._movieService.streamFile(id).subscribe({
+      next: (res: { path: string }) => this._handleStreamSuccess(res),
+      error: () => this._handleError('File not found')
+    });
+  }
+
+  private _handleStreamSuccess(res: { path: string }): void {
+    this.isLoading = false;
+    this.audioBlobUrl = res.path;
+    this.errorMessage = '';
+  }
+
+  private _handleError(message: string): void {
+    this.isLoading = false;
+    this.errorMessage = message;
+    this.audioBlob = null;
+    this.audioBlobUrl = null;
   }
 
   private _listenToTheme(): void {
@@ -104,9 +131,13 @@ export class HomeComponent implements OnInit {
     this.themeService.toggleMode();
   }
 
+  public focusInput(): void {
+    this._listenToInput();
+  }
+
   private _listenToInput(): void {
     this.filteredOptions = this.myControl.valueChanges.pipe(
-      startWith(' '),
+      startWith(''),
       map((value: any) => typeof value === 'string' ? value : value.name),
       map(name => name ? this._filter(name) : this.movies.slice())
     );
@@ -136,13 +167,16 @@ export class HomeComponent implements OnInit {
     // @ts-ignore
     input.nextElementSibling.classList.add(success ? 'bi-check-lg' : 'bi-exclamation-lg');
     input.classList.add(success ? 'success' : 'error');
+    input.blur();
     setTimeout(() => {
       // @ts-ignore
       input.nextElementSibling.classList.add('d-none');
       // @ts-ignore
       input.nextElementSibling.classList.remove(success ? 'bi-check-lg' : 'bi-exclamation-lg');
+      // @ts-ignore
       input.classList.remove(success ? 'success' : 'error');
       this.isSuccess = false;
+      input.blur();
     }, success ? 5000 : 500)
   }
 
@@ -158,7 +192,7 @@ export class HomeComponent implements OnInit {
         this.hints.push(`Here's a short plot for this movie: ${this.file?.plot}`);
         break;
       case 4:
-        this._revelFile();
+        this._getFileById(true);
         break;
     }
   }
@@ -169,26 +203,30 @@ export class HomeComponent implements OnInit {
       this._handleSuccess(input);
       return true;
     }
+    this._alterElements(false, input);
     input.value = '';
     return false;
   }
 
   private _handleSuccess(input: HTMLInputElement): void {
-    this._reset();
+    this._reset(input);
     this._alterElements(true, input);
     this.isSuccess = true;
   }
 
-  private _revelFile(): void {
+  private _getFileById(lost?: boolean, id?: number): void {
     this._reset();
-    this._movieService.getFileById(this.file.id)
-      .subscribe((res: File) => this.file.name = res.name);
-    this.isLost = true;
+    this._movieService.getFileById(id ?? this.file.id)
+      .subscribe((res: File) => this.file = res);
+    lost ? this.isLost = true : null;
   }
 
   private _reset(input?: HTMLInputElement): void {
     if (input) {
-      input.value = '';
+      input.disabled = true;
+      setTimeout(() => {
+        input.disabled = false;
+      }, 5000)
     }
     this.isLost = false;
     this.step = 0;
@@ -198,8 +236,6 @@ export class HomeComponent implements OnInit {
   }
 
   public onSubmit() {
-    console.log('wow')
-
     if (!this.selectedFile) {
       console.error('No file selected');
       return;

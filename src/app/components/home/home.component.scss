@@ -97,43 +97,65 @@
   background: #81aec7;
 }
 
-//input {
-//  height: 2.6rem;
-//  padding-left: 1rem;
-//  border-top: solid 1px #b7b7b7 !important;
-//  border-bottom: solid 1px #b7b7b7 !important;
-//  border-right: solid 1px #b7b7b7 !important;
-//  border-left: unset !important;
-//  box-shadow: unset;
-//  border-radius: 0 15px 15px 0;
-//  margin: 0;
-//  color: #a1a1a1;
-//  &::placeholder {
-//    color: #a1a1a1;
-//  }
-//
-//  &:focus {
-//    outline: none !important;
-//  }
-//
-//  &.error {
-//    border-top: solid 1px $red !important;
-//    border-bottom: solid 1px $red !important;
-//    border-right: solid 1px $red !important;
-//    border-left: solid 1px $red !important;
-//    background: lighten($light-red, 20%);
-//    animation: tiny-wiggle 3 100ms;
-//  }
-//
-//  &.success {
-//    border-top: solid 1px $green !important;
-//    border-bottom: solid 1px $green !important;
-//    border-right: solid 1px $green !important;
-//    border-left: solid 1px $green !important;
-//    background: lighten($light-green, 20%);
-//  //animation: tiny-wiggle 3 100ms;
-//  }
-//}
+button {
+  background-color:$blue;
+  border: transparent 1px;
+  height: 2rem;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all ease 200ms;
+  border-radius: 20px;
+
+  &:hover {
+    background-color: lighten($light-blue, 20%);
+    color: #000e17;
+  }
+}
+
+input {
+  height: 2.6rem;
+  padding-left: .5em;
+  padding-right: .5em;
+  border: solid 1px #b7b7b7 !important;
+  box-shadow: unset;
+  border-radius: 25px;
+  margin: 1em;
+  color: #737373;
+  transition: all ease 200ms;
+  &::placeholder {
+    color: #737373;
+    text-align: center;
+  }
+
+  &:focus {
+    outline: none !important;
+    border-radius: 25px 25px 0 0;
+  }
+
+  &.error {
+    border-top: solid 1px $red !important;
+    border-bottom: solid 1px $red !important;
+    border-right: solid 1px $red !important;
+    border-left: solid 1px $red !important;
+    background: lighten($light-red, 20%);
+    animation: tiny-wiggle 3 100ms;
+  }
+
+  &.success {
+    border-top: solid 1px $green !important;
+    border-bottom: solid 1px $green !important;
+    border-right: solid 1px $green !important;
+    border-left: solid 1px $green !important;
+    background: lighten($light-green, 20%);
+  }
+}
+
+.login-btn {
+  position: absolute;
+  bottom: 10px;
+}
 
 .bi-check-lg {
   color: $green;
@@ -141,22 +163,15 @@
 
 .bi-exclamation-lg {
   color: $red;
+  animation: wiggle 10 100ms;
 }
 
 .bi-exclamation-lg, .bi-check-lg {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  top: 20px;
   font-size: 25px;
   position: relative;
   right: 15px;
   width: 0;
-  animation: wiggle 10 100ms;
-  height: 41px;
-}
-
-.tiny-wiggle {
-  animation: ring 2.5s infinite;
 }
 
 @keyframes ring {
@@ -172,19 +187,19 @@
 
 @keyframes tiny-wiggle {
   10% {
-    rotate: 1deg
+    rotate: 300deg
   }
   100% {
-    rotate: -1deg
+    rotate: -300deg
   }
 }
 
 @keyframes wiggle {
   10% {
-    rotate: 10deg
+    rotate: 3deg
   }
   100% {
-    rotate: -10deg
+    rotate: -3deg
   }
 }
 

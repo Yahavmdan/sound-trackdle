@@ -34,6 +34,11 @@ $grey5: #d2d2d2;
 $grey6: #f6f6f6;
 $white: #ffffff;
 
+.cdk-overlay-pane:not(.mat-mdc-autocomplete-panel-above) div.mat-mdc-autocomplete-panel {
+  border-radius: 0 0 25px 25px !important;
+  transition: ease all 200ms;
+}
+
 html, body {
   height: 100%;
   margin: 0;
