@@ -193,7 +193,7 @@ export class HomeComponent implements OnInit {
         this.hints.push(`The movie was released at - ${this.file?.year}`);
         break;
       case 3:
-        this.hints.push(`Here's a short plot for this movie: ${this.file?.plot}`);
+        this.hints.push(`The genre of this movie: ${this.file?.genre}`);
         break;
       case 4:
         this._getFileById(true);
