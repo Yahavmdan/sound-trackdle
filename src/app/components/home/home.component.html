@@ -1,4 +1,5 @@
-<button class="login-btn" (click)="isForm = !isForm">login</button>
+<button class="action-btn" *ngIf="!isAdmin" (click)="isForm = !isForm">login</button>
+<button class="action-btn" *ngIf="isAdmin" (click)="logout()">logout</button>
 <form *ngIf="isForm" class="d-flex">
    <title>Login</title>
   <p>user name</p>
@@ -7,7 +8,7 @@
    <input class="h-50" #password type="password">
   <button class="h-50" (click)="login(username.value, password.value)" type="button">submit</button>
 </form>
-<form *ngIf="token" class="px-4 d-flex flex-column h-100 justify-content-center" >
+<form *ngIf="isAdmin" class="px-4 d-flex flex-column h-100 justify-content-center" >
   <input type="file" (change)="onFileSelected($event)" accept=".mp3">
   <button (click)="onSubmit()" type="button">Upload</button>
 </form>

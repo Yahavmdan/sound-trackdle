@@ -3,13 +3,14 @@ import { Observable } from "rxjs";
 import { File } from "../types/file.type";
 import { BaseService } from "./base.service";
 import { HttpClient } from "@angular/common/http";
+import { AuthService } from "./auth.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class FileService extends BaseService {
 
-  constructor(public override http: HttpClient) {
+  constructor(public override http: HttpClient, private _authService: AuthService) {
     super(http);
   }
 
@@ -17,8 +18,8 @@ export class FileService extends BaseService {
     return this.http.get<File[]>(this.baseUrl + 'movie');
   }
 
-  public upload(formData: FormData): Observable<any> {
-    return this.http.post(this.baseUrl + 'upload', formData, {headers: this.getHeaders()});
+  public upload(file: FormData): Observable<any> {
+    return this.http.post(this.baseUrl + 'upload', file, {headers: this._authService.getHeaders()});
   }
 
   public getFile(): Observable<File> {

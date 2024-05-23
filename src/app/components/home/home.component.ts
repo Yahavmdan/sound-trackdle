@@ -3,7 +3,7 @@ import { FileService } from "../../shared/services/file.service";
 import { AsyncPipe, NgClass, NgForOf, NgIf, TitleCasePipe } from "@angular/common";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { FormControl, ReactiveFormsModule } from "@angular/forms";
-import { map, Observable, startWith } from "rxjs";
+import { map, Observable, startWith, Subscription } from "rxjs";
 import { fade, glideY } from "../../shared/utilities/animations";
 import { File } from "../../shared/types/file.type";
 import { ThemeService } from "../../shared/services/theme.service";
@@ -32,7 +32,8 @@ export class HomeComponent implements OnInit {
   public hints: string[] = [];
   public file!: File;
   public files!: File[];
-  public token!: string | null;
+  public isAdminSub!: Subscription;
+  public isAdmin!: boolean;
   public isGuide: boolean = false;
   public isLost: boolean = false;
   public isSuccess: boolean = false;
@@ -55,6 +56,8 @@ export class HomeComponent implements OnInit {
     this._listenToInput();
     this._listenToTheme();
     this._initializeAnalytics();
+    this._isAdmin();
+    this._authService.autoLogin();
   }
 
   private _initializeAnalytics(): void {
@@ -62,6 +65,12 @@ export class HomeComponent implements OnInit {
       ? getAnalytics(initializeApp(firebaseConfig))
       : null;
   }
+
+    private _isAdmin(): void {
+        this.isAdminSub = this._authService.isAdmin.subscribe((isAdminAuthenticated: boolean): void => {
+            this.isAdmin = isAdminAuthenticated;
+        });
+    }
 
   public getRecentFiles(): void {
     if (this.files?.length) return;
@@ -257,8 +266,11 @@ export class HomeComponent implements OnInit {
   public login(username: string, password: string): void {
     if (!username || !password) return;
     this._authService.login({username, password}).subscribe(res => {
-      this.token = res.token;
-      localStorage.setItem('token', this.token);
+      this._authService.storeUserData(res);
     })
   }
+
+    public logout(): void {
+        this._authService.logout();
+    }
 }
