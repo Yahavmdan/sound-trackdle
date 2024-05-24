@@ -46,7 +46,13 @@
   </div>
   <h3 @fade *ngIf="isWin" class="text-green">Wow! good job!</h3>
   <div @fade *ngIf="!isWin && !isLost" class="card-wrapper d-flex col-sm-2 col-12 justify-content-evenly mt-2 mb-3">
-    <button class="pointer button-layout bg-yellow hold-button" [class.holding]="isHolding" (mousedown)="startHold(input)" (mouseup)="endHold()" (mouseleave)="cancelHold()">Skip...</button>
+    <button class="pointer button-layout bg-yellow hold-button"
+            [class.holding]="isHolding"
+            (mousedown)="startHold(input)"
+            (mouseup)="endHold()"
+            (mouseleave)="cancelHold()"
+            (touchstart)="startHold(input)" (touchmove)="cancelHold()" (touchcancel)="endHold()" (touchend)="cancelHold()"
+    >Skip...</button>
     <button class="pointer button-layout bg-green"  [ngClass]="isHolding ? 'col-3' : 'col-5'" (click)="submit(input)">Go!</button>
   </div>
   <button class="button-layout" [ngClass]="isWin || isLost ? 'ring' : ''" (click)="getRecentFiles()">Play recent challenges</button>

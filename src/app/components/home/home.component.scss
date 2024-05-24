@@ -98,6 +98,7 @@
 }
 
 button {
+  user-select: none;
   background-color:$blue;
   border: transparent 1px;
   height: 2rem;

@@ -41,8 +41,9 @@ export class HomeComponent implements OnInit {
   public isForm: boolean = false;
   public isLoading: boolean = false;
   public isRecentLoading: boolean = false;
+  public isMobile: boolean = false;
   private _holdTimeout!: ReturnType<typeof setTimeout>;
-  private _holdDuration = 1000; // 2 seconds
+  private _holdDuration = 1000;
   public isHolding = false;
   public step: number = 0;
   private _selectedFile = null;
@@ -61,6 +62,7 @@ export class HomeComponent implements OnInit {
     this._initializeAnalytics();
     this._isAdmin();
     this._authService.autoLogin();
+    this.isMobile = window.innerWidth < 768;
   }
 
   private _initializeAnalytics(): void {
@@ -191,10 +193,18 @@ export class HomeComponent implements OnInit {
     }
     if (this.isLost) return;
     if (this._checkAnswer(input)) return;
+
+    input.disabled = true;
+    setTimeout(() => {
+      input.disabled = false;
+    }, 1)
+
     this.step++;
     if (this.step === 4) {
       this.isLost = true;
-      input.disabled = true;
+      setTimeout(() => {
+        input.disabled = true;
+      }, 500)
     }
     this._failSteps();
   }
@@ -233,6 +243,7 @@ export class HomeComponent implements OnInit {
   private _checkAnswer(input: HTMLInputElement): boolean {
     if (input.value === this.file?.id?.toString()) {
       input.value = '';
+      input.disabled = true;
       this._handleSuccess(input);
       return true;
     }
@@ -242,7 +253,6 @@ export class HomeComponent implements OnInit {
   }
 
   private _handleSuccess(input: HTMLInputElement): void {
-    input.disabled = true;
     this._alterElements(true, input);
     this.isWin = true;
   }
