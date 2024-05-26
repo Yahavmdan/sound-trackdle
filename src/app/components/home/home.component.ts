@@ -36,12 +36,16 @@ export class HomeComponent implements OnInit {
   public isAdmin!: boolean;
   public isGuide: boolean = false;
   public isLost: boolean = false;
-  public isSuccess: boolean = false;
+  public isWin: boolean = false;
   public isDarkMode!: boolean;
   public isForm: boolean = false;
   public isLoading: boolean = false;
-
-  private _step: number = 0;
+  public isRecentLoading: boolean = false;
+  public isMobile: boolean = false;
+  private _holdTimeout!: ReturnType<typeof setTimeout>;
+  private _holdDuration = 1000;
+  public isHolding = false;
+  public step: number = 0;
   private _selectedFile = null;
   private _movies: File[] = [];
 
@@ -58,6 +62,7 @@ export class HomeComponent implements OnInit {
     this._initializeAnalytics();
     this._isAdmin();
     this._authService.autoLogin();
+    this.isMobile = window.innerWidth < 768;
   }
 
   private _initializeAnalytics(): void {
@@ -74,15 +79,39 @@ export class HomeComponent implements OnInit {
 
   public getRecentFiles(): void {
     if (this.files?.length) return;
+    this.isRecentLoading = true;
+    this.files = [];
     this._movieService.getRecentFiles().subscribe(res => {
+      this.isRecentLoading = false;
       this.files = res;
+      this._assignIfClicked();
     })
   }
 
-  public getFile(id?: number): void {
+  private _assignIfClicked(): void {
+    this.files.forEach(file => {
+      file.clicked = this._isClicked(file.id.toString());
+    });
+  }
+
+  private _isClicked(id: string): boolean {
+    return localStorage.getItem(id) === 'clicked';
+  }
+
+  private _markAsClicked(id: number): void {
+    localStorage.setItem(id.toString(), 'clicked');
+  }
+
+  public getFile(id?: number, input?: HTMLInputElement): void {
     if (id) {
-      this.audioBlobUrl = null;
+      this.audioBlobUrl = null
+      this._markAsClicked(id);
+      this._assignIfClicked();
     }
+    if (input) {
+      input.disabled = false;
+    }
+
     this._reset();
     this._movieService.getFile().subscribe({
       next: (file: File) => this._handleFileRetrieval(file, id),
@@ -154,38 +183,48 @@ export class HomeComponent implements OnInit {
 
   public onMovieSelected(selectedMovieId: number, input: HTMLInputElement) {
     const selectedMovie = this._movies.find(movie => movie.id === selectedMovieId);
-    if (selectedMovie) this._submit(input);
+    if (selectedMovie) this.submit(input);
   }
 
-  private _submit(input: HTMLInputElement): void {
+  public submit(input: HTMLInputElement): void {
+    if (!input.value) {
+      this._alterElements(false, input);
+      return;
+    }
     if (this.isLost) return;
     if (this._checkAnswer(input)) return;
-    this._step++;
+
+    input.disabled = true;
+    setTimeout(() => {
+      input.disabled = false;
+    }, 1)
+
+    this.step++;
+    if (this.step === 4) {
+      this.isLost = true;
+      setTimeout(() => {
+        input.disabled = true;
+      }, 500)
+    }
     this._failSteps();
   }
 
 
   private _alterElements(success: boolean, input: HTMLInputElement): void {
-    // @ts-ignore
-    input.nextElementSibling.classList.remove('d-none');
-    // @ts-ignore
-    input.nextElementSibling.classList.add(success ? 'bi-check-lg' : 'bi-exclamation-lg');
+    input.nextElementSibling?.classList.remove('d-none');
+    input.nextElementSibling?.classList.add(success ? 'bi-check-lg' : 'bi-exclamation-lg');
     input.classList.add(success ? 'success' : 'error');
     input.blur();
     setTimeout(() => {
-      // @ts-ignore
-      input.nextElementSibling.classList.add('d-none');
-      // @ts-ignore
-      input.nextElementSibling.classList.remove(success ? 'bi-check-lg' : 'bi-exclamation-lg');
-      // @ts-ignore
+      input.nextElementSibling?.classList.add('d-none');
+      input.nextElementSibling?.classList.remove(success ? 'bi-check-lg' : 'bi-exclamation-lg');
       input.classList.remove(success ? 'success' : 'error');
-      this.isSuccess = false;
       input.blur();
     }, success ? 5000 : 500)
   }
 
-  private _failSteps(): void {
-    switch (this._step) {
+  private _failSteps(input?: HTMLInputElement): void {
+    switch (this.step) {
       case 1:
         this.hints.push(`The main actor of this movie is - ${this.file?.main_actor}`);
         break;
@@ -196,7 +235,7 @@ export class HomeComponent implements OnInit {
         this.hints.push(`The genre of this movie: ${this.file?.genre}`);
         break;
       case 4:
-        this._getFileById(true);
+        this._getFileById(true, undefined, input);
         break;
     }
   }
@@ -204,6 +243,7 @@ export class HomeComponent implements OnInit {
   private _checkAnswer(input: HTMLInputElement): boolean {
     if (input.value === this.file?.id?.toString()) {
       input.value = '';
+      input.disabled = true;
       this._handleSuccess(input);
       return true;
     }
@@ -213,29 +253,23 @@ export class HomeComponent implements OnInit {
   }
 
   private _handleSuccess(input: HTMLInputElement): void {
-    this._reset(input);
     this._alterElements(true, input);
-    this.isSuccess = true;
+    this.isWin = true;
   }
 
-  private _getFileById(lost?: boolean, id?: number): void {
+  private _getFileById(lost?: boolean, id?: number, input?: HTMLInputElement): void {
     this._reset();
     this._movieService.getFileById(id ?? this.file.id)
       .subscribe((res: File) => this.file = res);
-    lost ? this.isLost = true : null;
+    if (lost) this.isLost = true;
+    if (input) input.disabled = true;
   }
 
-  private _reset(input?: HTMLInputElement): void {
-    if (input) {
-      input.disabled = true;
-      setTimeout(() => {
-        input.disabled = false;
-      }, 5000)
-    }
+  private _reset(): void {
+    this.isWin = false;
     this.isLost = false;
-    this._step = 0;
+    this.step = 0;
     this.hints = [];
-    this.isSuccess = false;
   }
 
   public onSubmit() {
@@ -273,4 +307,30 @@ export class HomeComponent implements OnInit {
     public logout(): void {
         this._authService.logout();
     }
+
+  public startHold(input: HTMLInputElement): void {
+    this.isHolding = true;
+    this._holdTimeout = setTimeout(() => {
+      this._performAction(input);
+      this.isHolding = false;
+    }, this._holdDuration);
+  }
+
+  public endHold(): void {
+    setTimeout(() => {
+      clearTimeout(this._holdTimeout);
+      this.isHolding = false;
+    }, 300)
+  }
+
+  public cancelHold(): void {
+    clearTimeout(this._holdTimeout);
+    this.isHolding = false;
+  }
+
+  private _performAction(input: HTMLInputElement): void {
+    if (this.isLost) input.disabled = true;
+    this.step++;
+    this._failSteps(input);
+  }
 }

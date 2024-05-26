@@ -5,6 +5,7 @@ export type File = {
   file_path?: string;
   main_actor?: string;
   played_at?: string;
+  clicked?: boolean;
   genre?: string;
   type: 'movie';
 }

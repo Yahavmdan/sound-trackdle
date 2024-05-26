@@ -98,6 +98,7 @@
 }
 
 button {
+  user-select: none;
   background-color:$blue;
   border: transparent 1px;
   height: 2rem;
@@ -139,7 +140,6 @@ input {
     border-bottom: solid 1px $red !important;
     border-right: solid 1px $red !important;
     border-left: solid 1px $red !important;
-    background: lighten($light-red, 20%);
     animation: tiny-wiggle 3 100ms;
   }
 
@@ -148,7 +148,6 @@ input {
     border-bottom: solid 1px $green !important;
     border-right: solid 1px $green !important;
     border-left: solid 1px $green !important;
-    background: lighten($light-green, 20%);
   }
 }
 
@@ -190,15 +189,54 @@ input {
   }
 }
 
-@keyframes ring {
-  10% { rotate: 1deg; transform: translateX(2px) }
-  13% { rotate: -1deg; transform: translateX(-2px) }
-  16% { rotate: 1deg; transform: translateX(2px) }
-  19% { rotate: -1deg; transform: translateX(-2px) }
-  22% { rotate: -1deg; transform: translateX(2px) }
-  25% { rotate: -1deg; transform: translateX(-2px) }
-  28% { rotate: -1deg; transform: translateX(2px) }
-  31% { rotate: 0deg }
+.hold-button {
+  overflow: hidden;
+  position: relative;
+  width: 40%;
+}
+
+.hold-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+      90deg,
+      $red,
+      $red 10px,
+      $light-red 10px,
+      $light-red 20px
+  );
+  opacity: 80%;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1s linear;
+}
+
+.hold-button.holding {
+  width: 60%;
+}
+
+.hold-button.holding::before {
+  transform: scaleX(1);
+}
+
+.hold-button:not(.holding)::before {
+  transition: transform 0.3s linear;
+}
+
+.ring {
+  animation: ringNBit 1.5s 5;
+}
+
+@keyframes ringNBit {
+  10% { rotate: 1deg; transform: scale(1.1) translateX(2px) }
+  13% { rotate: -1deg; transform: scale(1.1) translateX(-2px) }
+  16% { rotate: 1deg; transform: scale(1.1) translateX(2px) }
+  19% { rotate: -1deg; transform: scale(1.1) translateX(-2px) }
+  22% { rotate: -1deg; transform: scale(1.1) translateX(2px) }
+  25% { rotate: -1deg; transform: scale(1.1) translateX(-2px) }
+  28% { rotate: -1deg; transform: scale(1.1) translateX(2px) }
+31% { rotate: 0deg }
 }
 
 @keyframes tiny-wiggle {
