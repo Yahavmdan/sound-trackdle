@@ -12,20 +12,21 @@
   <p *ngIf="isGuide" @fade @glide class="col-10 col-sm-5 text-center f-14 f-sm-12 text-blue">Every day a different soundtrack from a movie will be provided,
   you need to guess what is the movie this soundtrack is from. you have 3 guesses. for each failure you'll be given a hint.</p>
   <div class="d-flex flex-wrap col-12 col-sm-6 col-md-4 justify-content-center">
-    <div @fade @glide *ngFor="let hint of hints;" class="d-flex flex-column align-items-center">
-      <i class="bi bi-lightbulb-fill text-yellow mx-2"></i>
-      <span class="fw-500 text-center">{{ hint }}</span>
+    <div @fade @glide *ngFor="let hint of hints;" class="d-flex align-items-center">
+      <i class="f-12 bi bi-lightbulb-fill text-yellow mx-2"></i>
+      <span class="f-12 text-center">{{ hint }}</span>
     </div>
   </div>
-  <audio @fade *ngIf="audioBlobUrl" class="my-2" controls>
+  <audio @fade *ngIf="audioBlobUrl" class="my-2 col-12 col-sm-5" controls>
     <source [src]="audioBlobUrl" type="audio/mpeg">
   </audio>
   <div @fade *ngIf="isLoading" class="spinner-border" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
     <span class="visually-hidden">Loading...</span>
   </div>
-  <div *ngIf="isLost && file.name">No more guesses! the movie was <span class="fw-700 f-24 text-red">{{ file.name + '!' | titlecase }}</span> better luck next time.</div>
-  <div class="d-flex">
+  <div class="text-center" *ngIf="isLost && file.name">No more guesses! the movie was <span class="fw-700 f-20 text-red">{{ file.name + '!' | titlecase }}</span> better luck next time.</div>
+  <div class="d-flex justify-content-center col-12">
     <input (focus)="focusInput()"
+           class="col-12 col-sm-4"
            placeholder="Guess the movie"
            type="text"
            [matAutocomplete]="auto"
@@ -39,13 +40,8 @@
       </mat-option>
     </mat-autocomplete>
 
-  <div *ngIf="isWin" [ngClass]="isWin ? 'many-confetti' : ''">
-    <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
-    <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
-    <div class="confetti"></div>
-  </div>
   <h3 @fade *ngIf="isWin" class="text-green">Wow! good job!</h3>
-  <div @fade *ngIf="!isWin && !isLost" class="card-wrapper d-flex col-sm-2 col-12 justify-content-evenly mt-2 mb-3">
+  <div @fade *ngIf="!isWin && !isLost" class="card-wrapper d-flex col-12 col-sm-3 justify-content-evenly mt-1 mb-3">
     <button class="pointer button-layout bg-yellow hold-button"
             [class.holding]="isHolding"
             (mousedown)="startHold(input)"
@@ -55,7 +51,7 @@
     >Skip...</button>
     <button class="pointer button-layout bg-green"  [ngClass]="isHolding ? 'col-3' : 'col-5'" (click)="submit(input)">Go!</button>
   </div>
-  <button class="button-layout" [ngClass]="isWin || isLost ? 'ring' : ''" (click)="getRecentFiles()">Play recent challenges</button>
+  <button class="button-layout col-6 col-sm-2" [ngClass]="isWin || isLost ? 'ring' : ''" (click)="getRecentFiles()">Play recent challenges</button>
   <div class="d-flex col-sm-5 col-12 flex-wrap card-wrapper my-3 justify-content-center" @fade @glide *ngIf="files">
     <div @fade *ngIf="isRecentLoading" class="spinner-border" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
       <span class="visually-hidden">Loading...</span>
@@ -83,3 +79,8 @@
   <input type="file" (change)="onFileSelected($event)" accept=".mp3">
   <button (click)="onSubmit()" type="button">Upload</button>
 </form>
+<div *ngIf="isWin" [ngClass]="isWin ? 'many-confetti' : ''">
+  <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
+  <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
+  <div class="confetti"></div>
+</div>
