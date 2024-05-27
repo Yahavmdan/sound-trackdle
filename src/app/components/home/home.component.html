@@ -65,7 +65,7 @@
     </div>
   </div>
 </div>
-<button class="action-btn" *ngIf="!isAdmin" (click)="isForm = !isForm">login</button>
+<button class="action-btn position-fixed" *ngIf="!isAdmin" (click)="isForm = !isForm">login</button>
 <button class="action-btn" *ngIf="isAdmin" (click)="logout()">logout</button>
 <form *ngIf="isForm" class="d-flex flex-column flex-wrap">
   <p>user name</p>
