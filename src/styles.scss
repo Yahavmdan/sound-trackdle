@@ -543,6 +543,11 @@ html, body {
   color: $light-blue !important;
 }
 
+.text-dark-blue {
+  color: $dark-blue !important;
+}
+
+
 .text-black {
   color: $black !important;
 }
@@ -889,12 +894,12 @@ html, body {
 }
 
 app-root > div.dark-theme-background > main > app-home > div > div.card-wrapper {
-  background: #004064;
+  background: $dark-blue;
   transition: background-color ease-in-out 200ms;
 }
 
 app-root > div.light-theme-background > main > app-home > div > div.card-wrapper {
-  background-color: #ebf7ff;
+  background-color: lighten($light-blue, 20%);
   transition: background-color ease-in-out 200ms;
 }
 

@@ -5,29 +5,44 @@
        class="bi"></i>
   </div>
 </div>
-<div @fade @glide class="d-flex flex-column align-items-center w-100">
+<div @fade @glide class="d-flex flex-column align-items-center justify-content-center w-100">
   <i class="bi bi-file-earmark-music-fill f-80 mt-5"></i>
-  <div class="f-24 f-sm-16 fw-700 col-6 text-center my-2">Sound Trackdle</div>
+  <div class="f-24 f-sm-16 fw-700 col-6 text-center my-2">Sound-Trackdle</div>
   <i (click)="isGuide = !isGuide" class="bi bi-info-circle text-blue my-1 pointer"></i>
-  <p *ngIf="isGuide" @fade @glide class="col-10 col-sm-5 text-center f-14 f-sm-12 text-blue">Every day a different soundtrack from a movie will be provided,
-  you need to guess what is the movie this soundtrack is from. you have 3 guesses. for each failure you'll be given a hint.</p>
+  <p *ngIf="isGuide" @fade @glide class="col-10 col-sm-5 text-center f-12 f-sm-12 text-blue">Every day, a different
+    soundtrack from a movie will be provided. You need to guess which movie the soundtrack is from. You have three
+    guesses. For each incorrect guess, you'll be given a hint and the soundtrack will last longer.</p>
   <div class="d-flex flex-wrap col-10 col-sm-6 col-md-4 justify-content-center">
     <div @fade @glide *ngFor="let hint of hints;" class="d-flex align-items-center">
       <i class="f-12 bi bi-lightbulb-fill text-yellow mx-2"></i>
       <span class="f-12 text-center">{{ hint }}</span>
     </div>
   </div>
-  <div *ngIf="audioUrl" tabindex="0" (keyup.enter)="playerActions(audioUrl, progressBar)" (click)="playerActions( audioUrl, progressBar)" class="play-btn mt-3"></div>
-  <div *ngIf="!audioUrl && !isLoading" class="playing mt-3">
-    <span class="playing__bar playing__bar1"></span>
-    <span class="playing__bar playing__bar2"></span>
-    <span class="playing__bar playing__bar3"></span>
-  </div>
-  <div class="counter-line my-3 col-10 col-sm-4">
-    <div #progressBar class="progress-bar"></div>
+  <div *ngIf="!isLoading" class="d-flex flex-column align-items-center w-100">
+    <div *ngIf="audioUrl" tabindex="0" (keyup.enter)="playerActions(audioUrl, progressBar)"
+         (click)="playerActions(audioUrl, progressBar)" class="play-btn mt-3"></div>
+    <div *ngIf="!audioUrl && !isLoading" class="playing mt-3">
+      <span class="playing-bar playing-bar1"></span>
+      <span class="playing-bar playing-bar2"></span>
+      <span class="playing-bar playing-bar3"></span>
+      <span class="playing-bar playing-bar4"></span>
+      <span class="playing-bar playing-bar5"></span>
+    </div>
+    <div class="counter-line my-3 col-10 col-sm-4">
+      <div #progressBar class="progress-bar"></div>
+    </div>
+    <div [ngSwitch]="step" [ngClass]="isDarkMode ? 'text-yellow' : 'text-dark-blue'" class="f-12 d-flex flex-wrap col-10 col-sm-6 col-md-4 text-center justify-content-center">
+      <div *ngIf="!isLost">
+        <div *ngSwitchCase="0">Step one - <span class="text-red f-14">5 </span> seconds of the track.</div>
+      </div>
+      <div *ngSwitchCase="1">Step two - <span class="text-red f-14">9 </span>  seconds of the track + 1st hint.</div>
+      <div *ngSwitchCase="2">Step three - <span class="text-red f-14">12 </span>  seconds of the track + 2nd hint.</div>
+      <div *ngSwitchCase="3">Step four - <span class="text-red f-14">15 </span>  seconds of the track + 3rd hint.</div>
+    </div>
+
   </div>
 
-  <div *ngIf="isLoading" class="spinner-border" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
+  <div *ngIf="isLoading" class="spinner-border my-3" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
     <span class="visually-hidden">Loading...</span>
   </div>
   <div class="text-center" *ngIf="isLost && file.name">No more guesses! the movie was <span class="fw-700 f-20 text-red">{{ file.name + '!' | titlecase }}</span> better luck next time.</div>
@@ -37,7 +52,7 @@
            placeholder="Guess the movie"
            type="text"
            [matAutocomplete]="auto"
-           [formControl]="myControl"
+           [formControl]="movieInput"
            #input>
     <i class="bi"></i>
   </div>
@@ -49,16 +64,25 @@
 
   <h3 @fade *ngIf="isWin" class="text-green">Wow! good job!</h3>
   <div @fade *ngIf="!isWin && !isLost" class="card-wrapper d-flex col-10 col-sm-3 justify-content-evenly mt-1 mb-3">
-    <button class="pointer button-layout bg-yellow hold-button"
+    <button class="pointer bg-yellow hold-button"
+            [disabled]="isAudioPlaying"
             [class.holding]="isHolding"
             (mousedown)="startHold(input)"
             (mouseup)="endHold()"
             (mouseleave)="cancelHold()"
-            (touchstart)="startHold(input)" (touchmove)="cancelHold()" (touchcancel)="endHold()" (touchend)="cancelHold()"
-    >Skip...</button>
-    <button class="pointer button-layout bg-green"  [ngClass]="isHolding ? 'col-3' : 'col-5'" (click)="submit(input)">Go!</button>
+            (touchstart)="startHold(input)"
+            (touchmove)="cancelHold()"
+            (touchcancel)="endHold()"
+            (touchend)="cancelHold()">Hint..?</button>
+    <button class="pointer bg-green"
+            [disabled]="isAudioPlaying"
+            [ngClass]="isHolding ? 'col-3' : 'col-5'"
+            (click)="submit(input)">Go!</button>
   </div>
-  <button class="button-layout col-6 col-sm-2" [ngClass]="isWin || isLost ? 'ring' : ''" (click)="getRecentFiles()">Play recent challenges</button>
+  <button class="col-6 col-sm-2"
+          [ngClass]="isWin || isLost ? 'ring' : ''"
+          (click)="getRecentFiles()"
+          [disabled]="isAudioPlaying">Play recent challenges</button>
   <div class="d-flex col-sm-5 col-10 flex-wrap card-wrapper my-3 justify-content-center" @fade @glide *ngIf="files">
     <div *ngIf="isRecentLoading" class="spinner-border" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
       <span class="visually-hidden">Loading...</span>

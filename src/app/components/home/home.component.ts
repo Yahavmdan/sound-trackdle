@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FileService } from "../../shared/services/file.service";
-import { AsyncPipe, NgClass, NgForOf, NgIf, TitleCasePipe } from "@angular/common";
+import { AsyncPipe, NgClass, NgForOf, NgIf, NgSwitch, NgSwitchCase, TitleCasePipe } from "@angular/common";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { FormControl, ReactiveFormsModule } from "@angular/forms";
 import { map, Observable, startWith, Subscription } from "rxjs";
@@ -17,7 +17,7 @@ import { firebaseConfig } from "../../../environments/environment.prod";
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
-  imports: [NgIf, NgForOf,NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule],
+  imports: [NgIf, NgForOf, NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule, NgSwitchCase, NgSwitch],
   standalone: true,
   animations: [
     fade('fade', 500),
@@ -27,7 +27,7 @@ import { firebaseConfig } from "../../../environments/environment.prod";
 
 export class HomeComponent implements OnInit {
   public audioUrl!: string | null;
-  public myControl = new FormControl('');
+  public movieInput = new FormControl('');
   public filteredOptions!: Observable<{ name: string, id: number }[]>;
   public hints: string[] = [];
   public file!: File;
@@ -42,6 +42,7 @@ export class HomeComponent implements OnInit {
   public isLoading: boolean = false;
   public isRecentLoading: boolean = false;
   public isMobile: boolean = false;
+  public isAudioPlaying: boolean = false;
   private _holdTimeout!: ReturnType<typeof setTimeout>;
   private _holdDuration = 1000;
   public isHolding = false;
@@ -79,8 +80,8 @@ export class HomeComponent implements OnInit {
     }
 
   public getRecentFiles(): void {
-    this.isRecentLoading = true;
     if (this.files?.length) return;
+    this.isRecentLoading = true;
     this.files = [];
     this._movieService.getRecentFiles().subscribe(res => {
       this.isRecentLoading = false;
@@ -104,6 +105,7 @@ export class HomeComponent implements OnInit {
   }
 
   public getFile(id?: number, input?: HTMLInputElement): void {
+    this.isLoading = true;
     if (id) {
       this.audioUrl = null
       this._markAsClicked(id);
@@ -137,7 +139,7 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  public playerActions(audioUrl: string | null, progress: HTMLDivElement): void {
+  public playerActions(audioUrl: string, progress: HTMLDivElement): void {
     if (!this.audioUrl) {
       return;
     }
@@ -145,14 +147,26 @@ export class HomeComponent implements OnInit {
     this.audioUrl = null;
     const audio = new Audio(audioUrl ?? '');
     if (audio.paused) {
-      audio.currentTime = 0;
-      void audio.play();
-      this._startAnimation(progress);
+      this._play(audio, progress);
       setTimeout(() => {
-        audio.pause();
-        this.audioUrl = url;
+        this._pause(audio, url);
       }, this._determineTimeOfTrackByStep());
     }
+  }
+
+  private _play(audio: HTMLAudioElement, progress: HTMLDivElement): void {
+    audio.currentTime = 0;
+    void audio.play();
+    this.isAudioPlaying = true;
+    this.movieInput.disable();
+    this._startAnimation(progress);
+  }
+
+  private _pause(audio: HTMLAudioElement, url: string): void {
+    audio.pause();
+    this.isAudioPlaying = false;
+    this.movieInput.enable();
+    this.audioUrl = url;
   }
 
   private _startAnimation(progress: HTMLDivElement): void {
@@ -166,8 +180,9 @@ export class HomeComponent implements OnInit {
     let val;
     switch (this.step) {
       case 0: val = 5000; break;
-      case 1: val = 10000; break;
-      case 2: val = 15000; break;
+      case 1: val = 9000; break;
+      case 2: val =  12000; break;
+      case 3: val =  15000; break;
       default: val = 0;
     }
     return val;
@@ -205,7 +220,7 @@ export class HomeComponent implements OnInit {
   }
 
   private _listenToInput(): void {
-    this.filteredOptions = this.myControl.valueChanges.pipe(
+    this.filteredOptions = this.movieInput.valueChanges.pipe(
       startWith(''),
       map((value: any) => typeof value === 'string' ? value : value.name),
       map(name => name ? this._filter(name) : this._movies.slice())
@@ -218,6 +233,7 @@ export class HomeComponent implements OnInit {
   }
 
   public onMovieSelected(selectedMovieId: number, input: HTMLInputElement) {
+    if (this.isAudioPlaying) return;
     const selectedMovie = this._movies.find(movie => movie.id === selectedMovieId);
     if (selectedMovie) this.submit(input);
   }
@@ -356,7 +372,7 @@ export class HomeComponent implements OnInit {
     setTimeout(() => {
       clearTimeout(this._holdTimeout);
       this.isHolding = false;
-    }, 300)
+    }, 100)
   }
 
   public cancelHold(): void {
