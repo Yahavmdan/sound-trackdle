@@ -361,6 +361,7 @@ export class HomeComponent implements OnInit {
     }
 
   public startHold(input: HTMLInputElement): void {
+    if (this.isAudioPlaying) return;
     this.isHolding = true;
     this._holdTimeout = setTimeout(() => {
       this._performAction(input);
