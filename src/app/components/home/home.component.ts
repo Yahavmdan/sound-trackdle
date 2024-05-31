@@ -63,6 +63,7 @@ export class HomeComponent implements OnInit {
     this._isAdmin();
     this._authService.autoLogin();
     this.isMobile = window.innerWidth < 768;
+    this.isLoading = true;
   }
 
   private _initializeAnalytics(): void {
@@ -78,8 +79,8 @@ export class HomeComponent implements OnInit {
     }
 
   public getRecentFiles(): void {
-    if (this.files?.length) return;
     this.isRecentLoading = true;
+    if (this.files?.length) return;
     this.files = [];
     this._movieService.getRecentFiles().subscribe(res => {
       this.isRecentLoading = false;
@@ -130,7 +131,6 @@ export class HomeComponent implements OnInit {
   }
 
   private _stream(id: number): void {
-    this.isLoading = true;
     this._movieService.streamFile(id).subscribe({
       next: (res: { path: string }) => this._handleStreamSuccess(res),
       error: () => this._handleError()
