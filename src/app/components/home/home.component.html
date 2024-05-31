@@ -17,9 +17,20 @@
       <span class="f-12 text-center">{{ hint }}</span>
     </div>
   </div>
-  <audio @fade *ngIf="audioBlobUrl" class="my-2 col-12 col-sm-5" controls>
-    <source [src]="audioBlobUrl" type="audio/mpeg">
-  </audio>
+  <div *ngIf="audioUrl">
+    <audio [src]="audioUrl" @fade *ngIf="audioUrl" class="my-2 col-12 col-sm-5">
+    </audio>
+  </div>
+  <div *ngIf="audioUrl" tabindex="0" (keyup.enter)="playerActions(audioUrl, progressBar)" (click)="playerActions( audioUrl, progressBar)" class="play-btn mt-3"></div>
+  <div *ngIf="!audioUrl && !isLoading" class="playing mt-3">
+    <span class="playing__bar playing__bar1"></span>
+    <span class="playing__bar playing__bar2"></span>
+    <span class="playing__bar playing__bar3"></span>
+  </div>
+  <div class="counter-line my-3 col-10 col-sm-4">
+    <div #progressBar class="progress-bar"></div>
+  </div>
+
   <div @fade *ngIf="isLoading" class="spinner-border" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
     <span class="visually-hidden">Loading...</span>
   </div>

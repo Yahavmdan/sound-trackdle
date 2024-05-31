@@ -26,7 +26,7 @@ import { firebaseConfig } from "../../../environments/environment.prod";
 })
 
 export class HomeComponent implements OnInit {
-  public audioBlobUrl!: string | null;
+  public audioUrl!: string | null;
   public myControl = new FormControl('');
   public filteredOptions!: Observable<{ name: string, id: number }[]>;
   public hints: string[] = [];
@@ -104,7 +104,7 @@ export class HomeComponent implements OnInit {
 
   public getFile(id?: number, input?: HTMLInputElement): void {
     if (id) {
-      this.audioBlobUrl = null
+      this.audioUrl = null
       this._markAsClicked(id);
       this._assignIfClicked();
     }
@@ -137,14 +137,50 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  public playerActions(audioUrl: string | null, progress: HTMLDivElement): void {
+    if (!this.audioUrl) {
+      return;
+    }
+    let url = this.audioUrl;
+    this.audioUrl = null;
+    const audio = new Audio(audioUrl ?? '');
+    if (audio.paused) {
+      audio.currentTime = 0;
+      void audio.play();
+      this._startAnimation(progress);
+      setTimeout(() => {
+        audio.pause();
+        this.audioUrl = url;
+      }, this._determineTimeOfTrackByStep());
+    }
+  }
+
+  private _startAnimation(progress: HTMLDivElement): void {
+    progress.classList.add(`ani${this._determineTimeOfTrackByStep()}`)
+    setTimeout(() => {
+      progress.classList.remove(`ani${this._determineTimeOfTrackByStep()}`)
+    }, this._determineTimeOfTrackByStep())
+  }
+
+  private _determineTimeOfTrackByStep(): number {
+    let val;
+    switch (this.step) {
+      case 0: val = 5000; break;
+      case 1: val = 10000; break;
+      case 2: val = 15000; break;
+      default: val = 0;
+    }
+    return val;
+  }
+
   private _handleStreamSuccess(res: { path: string }): void {
+    this.audioUrl = res.path;
     this.isLoading = false;
-    this.audioBlobUrl = res.path;
   }
 
   private _handleError(): void {
     this.isLoading = false;
-    this.audioBlobUrl = null;
+    this.audioUrl = null;
   }
 
   private _listenToTheme(): void {
