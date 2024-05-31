@@ -22,6 +22,14 @@ export class FileService extends BaseService {
     return this.http.post(this.baseUrl + 'upload', file, {headers: this._authService.getHeaders()});
   }
 
+  public massDelete(): Observable<any> {
+    return this.http.delete(this.baseUrl + 'delete/all', {headers: this._authService.getHeaders()});
+  }
+
+  public fileIndex(): Observable<any> {
+    return this.http.get(this.baseUrl + 'file/index', {headers: this._authService.getHeaders()});
+  }
+
   public getFile(): Observable<File> {
     return this.http.get<File>(this.baseUrl + 'file');
   }

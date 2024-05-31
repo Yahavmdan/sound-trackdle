@@ -47,11 +47,11 @@ export class HomeComponent implements OnInit {
   private _holdDuration = 1000;
   public isHolding = false;
   public step: number = 0;
-  private _selectedFile = null;
+  private _selectedFiles: [] = [];
   private _movies: File[] = [];
 
 
-  constructor(private _movieService: FileService,
+  constructor(private _fileService: FileService,
               public themeService: ThemeService,
               private _authService: AuthService) {
   }
@@ -83,7 +83,7 @@ export class HomeComponent implements OnInit {
     if (this.files?.length) return;
     this.isRecentLoading = true;
     this.files = [];
-    this._movieService.getRecentFiles().subscribe(res => {
+    this._fileService.getRecentFiles().subscribe(res => {
       this.isRecentLoading = false;
       this.files = res;
       this._assignIfClicked();
@@ -116,7 +116,7 @@ export class HomeComponent implements OnInit {
     }
 
     this._reset();
-    this._movieService.getFile().subscribe({
+    this._fileService.getFile().subscribe({
       next: (file: File) => this._handleFileRetrieval(file, id),
       error: () => this._handleError()
     });
@@ -133,7 +133,7 @@ export class HomeComponent implements OnInit {
   }
 
   private _stream(id: number): void {
-    this._movieService.streamFile(id).subscribe({
+    this._fileService.streamFile(id).subscribe({
       next: (res: { path: string }) => this._handleStreamSuccess(res),
       error: () => this._handleError()
     });
@@ -205,7 +205,7 @@ export class HomeComponent implements OnInit {
   }
 
   private _getMovies(): void {
-    this._movieService.index().subscribe(res => {
+    this._fileService.index().subscribe(res => {
       this._movies = res;
       this.getFile();
     });
@@ -311,7 +311,7 @@ export class HomeComponent implements OnInit {
 
   private _getFileById(lost?: boolean, id?: number, input?: HTMLInputElement): void {
     this._reset();
-    this._movieService.getFileById(id ?? this.file.id)
+    this._fileService.getFileById(id ?? this.file.id)
       .subscribe((res: File) => this.file = res);
     if (lost) this.isLost = true;
     if (input) input.disabled = true;
@@ -324,29 +324,45 @@ export class HomeComponent implements OnInit {
     this.hints = [];
   }
 
-  public onSubmit() {
-    if (!this._selectedFile) {
-      console.error('No file selected');
+  public upload(): void {
+    if (!this._selectedFiles || this._selectedFiles.length === 0) {
+      console.error('No files selected');
       return;
     }
 
     const formData = new FormData();
-    formData.append('file', this._selectedFile);
+    for (let i = 0; i < this._selectedFiles.length; i++) {
+      formData.append('files[]', this._selectedFiles[i]);
+    }
 
-    this._movieService.upload(formData)
+    this._fileService.upload(formData)
       .subscribe({
         next: (response) => {
           console.log(response);
-          console.log('File uploaded successfully');
+          console.log('Files uploaded successfully');
         },
         error: (error) => {
-          console.error('Error uploading file:', error);
+          console.error('Error uploading files:', error);
         }
       });
   }
 
+  public massDelete(): void {
+    let answer: boolean = confirm('Are you sure you want to delete?');
+    if (!answer) return;
+    this._fileService.massDelete().subscribe(res => {
+      console.log(res)
+    });
+  }
+
+  public fileIndex(): void {
+    this._fileService.fileIndex().subscribe(res => {
+      console.log(res)
+    });
+  }
+
   public onFileSelected(event: any) {
-    this._selectedFile = event.target.files[0];
+    this._selectedFiles = event.target.files;
   }
 
   public login(username: string, password: string): void {
