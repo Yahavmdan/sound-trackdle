@@ -47,7 +47,7 @@ export class HomeComponent implements OnInit {
   private _holdDuration = 1000;
   public isHolding = false;
   public step: number = 0;
-  private _selectedFiles: [] = [];
+  private _zipFile = null;
   private _movies: File[] = [];
 
 
@@ -325,15 +325,14 @@ export class HomeComponent implements OnInit {
   }
 
   public upload(): void {
-    if (!this._selectedFiles || this._selectedFiles.length === 0) {
+    if (!this._zipFile) {
       console.error('No files selected');
       return;
     }
 
     const formData = new FormData();
-    for (let i = 0; i < this._selectedFiles.length; i++) {
-      formData.append('files[]', this._selectedFiles[i]);
-    }
+    formData.append('file', this._zipFile);
+    console.log(formData);
 
     this._fileService.upload(formData)
       .subscribe({
@@ -361,8 +360,13 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  public onFileSelected(event: any) {
-    this._selectedFiles = event.target.files;
+  public onFileSelected(event: any): void {
+    const files = event.target.files;
+    if (files.length > 0) {
+      this._zipFile = files[0];
+    } else {
+      this._zipFile = null;
+    }
   }
 
   public login(username: string, password: string): void {
