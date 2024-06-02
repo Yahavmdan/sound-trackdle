@@ -106,7 +106,7 @@
   <button class="h-50" (click)="login(username.value, password.value)" type="button">submit</button>
 </form>
 <form *ngIf="isAdmin" class="px-4 d-flex flex-column h-100 justify-content-center" >
-  <input type="file" (change)="onFileSelected($event)" accept=".zip" multiple>
+  <input type="file" (change)="onFileSelected($event)" accept=".zip,.mp3" multiple>
   <button (click)="upload()" type="button">Upload</button>
   <button (click)="massDelete()" type="button">Mass delete</button>
   <button (click)="fileIndex()" type="button">print file index</button>
