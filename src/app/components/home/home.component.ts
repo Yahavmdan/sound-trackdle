@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FileService } from "../../shared/services/file.service";
-import { AsyncPipe, NgClass, NgForOf, NgIf, TitleCasePipe } from "@angular/common";
+import { AsyncPipe, NgClass, NgForOf, NgIf, NgSwitch, NgSwitchCase, TitleCasePipe } from "@angular/common";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { FormControl, ReactiveFormsModule } from "@angular/forms";
 import { map, Observable, startWith, Subscription } from "rxjs";
@@ -17,7 +17,7 @@ import { firebaseConfig } from "../../../environments/environment.prod";
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
-  imports: [NgIf, NgForOf,NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule],
+  imports: [NgIf, NgForOf, NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule, NgSwitchCase, NgSwitch],
   standalone: true,
   animations: [
     fade('fade', 500),
@@ -26,8 +26,8 @@ import { firebaseConfig } from "../../../environments/environment.prod";
 })
 
 export class HomeComponent implements OnInit {
-  public audioBlobUrl!: string | null;
-  public myControl = new FormControl('');
+  public audioUrl!: string | null;
+  public movieInput = new FormControl('');
   public filteredOptions!: Observable<{ name: string, id: number }[]>;
   public hints: string[] = [];
   public file!: File;
@@ -42,15 +42,16 @@ export class HomeComponent implements OnInit {
   public isLoading: boolean = false;
   public isRecentLoading: boolean = false;
   public isMobile: boolean = false;
+  public isAudioPlaying: boolean = false;
   private _holdTimeout!: ReturnType<typeof setTimeout>;
   private _holdDuration = 1000;
   public isHolding = false;
   public step: number = 0;
-  private _selectedFile = null;
+  private _zipFile = null;
   private _movies: File[] = [];
 
 
-  constructor(private _movieService: FileService,
+  constructor(private _fileService: FileService,
               public themeService: ThemeService,
               private _authService: AuthService) {
   }
@@ -79,10 +80,10 @@ export class HomeComponent implements OnInit {
     }
 
   public getRecentFiles(): void {
-    this.isRecentLoading = true;
     if (this.files?.length) return;
+    this.isRecentLoading = true;
     this.files = [];
-    this._movieService.getRecentFiles().subscribe(res => {
+    this._fileService.getRecentFiles().subscribe(res => {
       this.isRecentLoading = false;
       this.files = res;
       this._assignIfClicked();
@@ -104,8 +105,9 @@ export class HomeComponent implements OnInit {
   }
 
   public getFile(id?: number, input?: HTMLInputElement): void {
+    this.isLoading = true;
     if (id) {
-      this.audioBlobUrl = null
+      this.audioUrl = null
       this._markAsClicked(id);
       this._assignIfClicked();
     }
@@ -114,7 +116,7 @@ export class HomeComponent implements OnInit {
     }
 
     this._reset();
-    this._movieService.getFile().subscribe({
+    this._fileService.getFile().subscribe({
       next: (file: File) => this._handleFileRetrieval(file, id),
       error: () => this._handleError()
     });
@@ -131,20 +133,69 @@ export class HomeComponent implements OnInit {
   }
 
   private _stream(id: number): void {
-    this._movieService.streamFile(id).subscribe({
+    this._fileService.streamFile(id).subscribe({
       next: (res: { path: string }) => this._handleStreamSuccess(res),
       error: () => this._handleError()
     });
   }
 
+  public playerActions(audioUrl: string, progress: HTMLDivElement): void {
+    if (!this.audioUrl) {
+      return;
+    }
+    let url = this.audioUrl;
+    this.audioUrl = null;
+    const audio = new Audio(audioUrl ?? '');
+    if (audio.paused) {
+      this._play(audio, progress);
+      setTimeout(() => {
+        this._pause(audio, url);
+      }, this._determineTimeOfTrackByStep());
+    }
+  }
+
+  private _play(audio: HTMLAudioElement, progress: HTMLDivElement): void {
+    audio.currentTime = 0;
+    void audio.play();
+    this.isAudioPlaying = true;
+    this.movieInput.disable();
+    this._startAnimation(progress);
+  }
+
+  private _pause(audio: HTMLAudioElement, url: string): void {
+    audio.pause();
+    this.isAudioPlaying = false;
+    this.movieInput.enable();
+    this.audioUrl = url;
+  }
+
+  private _startAnimation(progress: HTMLDivElement): void {
+    progress.classList.add(`ani${this._determineTimeOfTrackByStep()}`)
+    setTimeout(() => {
+      progress.classList.remove(`ani${this._determineTimeOfTrackByStep()}`)
+    }, this._determineTimeOfTrackByStep())
+  }
+
+  private _determineTimeOfTrackByStep(): number {
+    let val;
+    switch (this.step) {
+      case 0: val = 5000; break;
+      case 1: val = 9000; break;
+      case 2: val =  12000; break;
+      case 3: val =  15000; break;
+      default: val = 0;
+    }
+    return val;
+  }
+
   private _handleStreamSuccess(res: { path: string }): void {
+    this.audioUrl = res.path;
     this.isLoading = false;
-    this.audioBlobUrl = res.path;
   }
 
   private _handleError(): void {
     this.isLoading = false;
-    this.audioBlobUrl = null;
+    this.audioUrl = null;
   }
 
   private _listenToTheme(): void {
@@ -154,7 +205,7 @@ export class HomeComponent implements OnInit {
   }
 
   private _getMovies(): void {
-    this._movieService.index().subscribe(res => {
+    this._fileService.index().subscribe(res => {
       this._movies = res;
       this.getFile();
     });
@@ -169,7 +220,7 @@ export class HomeComponent implements OnInit {
   }
 
   private _listenToInput(): void {
-    this.filteredOptions = this.myControl.valueChanges.pipe(
+    this.filteredOptions = this.movieInput.valueChanges.pipe(
       startWith(''),
       map((value: any) => typeof value === 'string' ? value : value.name),
       map(name => name ? this._filter(name) : this._movies.slice())
@@ -182,6 +233,7 @@ export class HomeComponent implements OnInit {
   }
 
   public onMovieSelected(selectedMovieId: number, input: HTMLInputElement) {
+    if (this.isAudioPlaying) return;
     const selectedMovie = this._movies.find(movie => movie.id === selectedMovieId);
     if (selectedMovie) this.submit(input);
   }
@@ -259,7 +311,7 @@ export class HomeComponent implements OnInit {
 
   private _getFileById(lost?: boolean, id?: number, input?: HTMLInputElement): void {
     this._reset();
-    this._movieService.getFileById(id ?? this.file.id)
+    this._fileService.getFileById(id ?? this.file.id)
       .subscribe((res: File) => this.file = res);
     if (lost) this.isLost = true;
     if (input) input.disabled = true;
@@ -272,29 +324,49 @@ export class HomeComponent implements OnInit {
     this.hints = [];
   }
 
-  public onSubmit() {
-    if (!this._selectedFile) {
-      console.error('No file selected');
+  public upload(): void {
+    if (!this._zipFile) {
+      console.error('No files selected');
       return;
     }
 
     const formData = new FormData();
-    formData.append('file', this._selectedFile);
+    formData.append('file', this._zipFile);
+    console.log(formData);
 
-    this._movieService.upload(formData)
+    this._fileService.upload(formData)
       .subscribe({
         next: (response) => {
           console.log(response);
-          console.log('File uploaded successfully');
+          console.log('Files uploaded successfully');
         },
         error: (error) => {
-          console.error('Error uploading file:', error);
+          console.error('Error uploading files:', error);
         }
       });
   }
 
-  public onFileSelected(event: any) {
-    this._selectedFile = event.target.files[0];
+  public massDelete(): void {
+    let answer: boolean = confirm('Are you sure you want to delete?');
+    if (!answer) return;
+    this._fileService.massDelete().subscribe(res => {
+      console.log(res)
+    });
+  }
+
+  public fileIndex(): void {
+    this._fileService.fileIndex().subscribe(res => {
+      console.log(res)
+    });
+  }
+
+  public onFileSelected(event: any): void {
+    const files = event.target.files;
+    if (files.length > 0) {
+      this._zipFile = files[0];
+    } else {
+      this._zipFile = null;
+    }
   }
 
   public login(username: string, password: string): void {
@@ -309,6 +381,7 @@ export class HomeComponent implements OnInit {
     }
 
   public startHold(input: HTMLInputElement): void {
+    if (this.isAudioPlaying) return;
     this.isHolding = true;
     this._holdTimeout = setTimeout(() => {
       this._performAction(input);
@@ -320,7 +393,7 @@ export class HomeComponent implements OnInit {
     setTimeout(() => {
       clearTimeout(this._holdTimeout);
       this.isHolding = false;
-    }, 300)
+    }, 100)
   }
 
   public cancelHold(): void {
