@@ -894,11 +894,6 @@ input {
     text-align: center;
   }
 
-  &:focus {
-    outline: none !important;
-    border-radius: 25px 25px 0 0;
-  }
-
   &.error {
     border-top: solid 1px $red !important;
     border-bottom: solid 1px $red !important;

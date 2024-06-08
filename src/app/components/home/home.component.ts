@@ -3,11 +3,10 @@ import { FileService } from "../../shared/services/file.service";
 import { AsyncPipe, NgClass, NgForOf, NgIf, NgSwitch, NgSwitchCase, TitleCasePipe } from "@angular/common";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { FormControl, ReactiveFormsModule } from "@angular/forms";
-import { map, Observable, startWith, Subscription } from "rxjs";
+import { map, Observable, startWith } from "rxjs";
 import { fade, glideY } from "../../shared/utilities/animations";
 import { File } from "../../shared/types/file.type";
 import { ThemeService } from "../../shared/services/theme.service";
-import { AuthService } from "../../shared/services/auth.service";
 import { environment } from "../../../environments/environment";
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
@@ -19,7 +18,8 @@ import { ConfettiComponent } from "../../shared/components/confetti/confetti.com
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
-  imports: [NgIf, NgForOf, NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule, NgSwitchCase, NgSwitch, LoginComponent, ConfettiComponent],
+  imports: [NgIf, NgForOf, NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule, NgSwitchCase,
+    NgSwitch, LoginComponent, ConfettiComponent],
   standalone: true,
   animations: [
     fade('fade', 500),
@@ -110,6 +110,14 @@ export class HomeComponent implements OnInit {
       next: (file: File) => this._handleFileRetrieval(file, id),
       error: () => this._handleError()
     });
+  }
+
+  onSelectOpen(input: HTMLInputElement, event?: 'open') {
+    if (event) {
+      input.classList.add('merge-with-select');
+      return;
+    }
+    input.classList.remove('merge-with-select');
   }
 
   private _handleFileRetrieval(file: File, id?: number): void {
@@ -256,12 +264,10 @@ export class HomeComponent implements OnInit {
     input.nextElementSibling?.classList.remove('d-none');
     input.nextElementSibling?.classList.add(success ? 'bi-check-lg' : 'bi-exclamation-lg');
     input.classList.add(success ? 'success' : 'error');
-    input.blur();
     setTimeout(() => {
       input.nextElementSibling?.classList.add('d-none');
       input.nextElementSibling?.classList.remove(success ? 'bi-check-lg' : 'bi-exclamation-lg');
       input.classList.remove(success ? 'success' : 'error');
-      input.blur();
     }, success ? 5000 : 500)
   }
 
@@ -313,62 +319,6 @@ export class HomeComponent implements OnInit {
     this.step = 0;
     this.hints = [];
   }
-
-  // public upload(): void {
-  //   if (!this._zipFile) {
-  //     console.error('No files selected');
-  //     return;
-  //   }
-  //
-  //   const formData = new FormData();
-  //   formData.append('file', this._zipFile);
-  //   console.log(formData);
-  //
-  //   this._fileService.upload(formData)
-  //     .subscribe({
-  //       next: (response) => {
-  //         console.log(response);
-  //         console.log('Files uploaded successfully');
-  //       },
-  //       error: (error) => {
-  //         console.error('Error uploading files:', error);
-  //       }
-  //     });
-  // }
-
-  // public massDelete(): void {
-  //   let answer: boolean = confirm('Are you sure you want to delete?');
-  //   if (!answer) return;
-  //   this._fileService.massDelete().subscribe(res => {
-  //     console.log(res)
-  //   });
-  // }
-  //
-  // public fileIndex(): void {
-  //   this._fileService.fileIndex().subscribe(res => {
-  //     console.log(res)
-  //   });
-  // }
-
-  // public onFileSelected(event: any): void {
-  //   const files = event.target.files;
-  //   if (files.length > 0) {
-  //     this._zipFile = files[0];
-  //   } else {
-  //     this._zipFile = null;
-  //   }
-  // }
-
-  // public login(username: string, password: string): void {
-  //   if (!username || !password) return;
-  //   this._authService.login({username, password}).subscribe(res => {
-  //     this._authService.storeUserData(res);
-  //   })
-  // }
-
-    // public logout(): void {
-    //     this._authService.logout();
-    // }
 
   public startHold(input: HTMLInputElement): void {
     if (this.isAudioPlaying) return;

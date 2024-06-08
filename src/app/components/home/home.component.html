@@ -53,10 +53,15 @@
            type="text"
            [matAutocomplete]="auto"
            [formControl]="movieInput"
+           matAutocompletePosition="below"
            #input>
     <i class="bi"></i>
   </div>
-    <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onMovieSelected($event.option.value, input)">
+    <mat-autocomplete
+      #auto="matAutocomplete"
+      (closed)="onSelectOpen(input)"
+      (opened)="onSelectOpen(input, 'open')"
+      (optionSelected)="onMovieSelected($event.option.value, input)">
       <mat-option *ngFor="let movie of filteredOptions | async" [value]="movie.id">
         {{ movie.name }}
       </mat-option>

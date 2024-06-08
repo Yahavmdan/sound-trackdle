@@ -140,6 +140,11 @@
   animation: ringNBit 1.5s 5;
 }
 
+.merge-with-select {
+  outline: none !important;
+  border-radius: 25px 25px 0 0;
+}
+
 .playing {
   background: $dark-blue;
   width: 3rem;
