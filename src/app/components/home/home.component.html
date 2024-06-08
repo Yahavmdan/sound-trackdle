@@ -21,7 +21,7 @@
   <div *ngIf="!isLoading" class="d-flex flex-column align-items-center w-100">
     <div *ngIf="audioUrl" tabindex="0" (keyup.enter)="playerActions(audioUrl, progressBar)"
          (click)="playerActions(audioUrl, progressBar)" class="play-btn mt-3"></div>
-    <div *ngIf="!audioUrl && !isLoading" class="playing mt-3">
+    <div *ngIf="isAudioPlaying" class="playing mt-3">
       <span class="playing-bar playing-bar1"></span>
       <span class="playing-bar playing-bar2"></span>
       <span class="playing-bar playing-bar3"></span>
@@ -83,7 +83,7 @@
           [ngClass]="isWin() || isLost ? 'ring' : ''"
           (click)="getRecentFiles()"
           [disabled]="isAudioPlaying">Play recent challenges</button>
-  <div class="d-flex col-sm-5 col-10 flex-wrap card-wrapper my-3 justify-content-center" @fade @glide *ngIf="files">
+  <div class="d-flex col-sm-5 col-10 flex-wrap card-wrapper my-3 justify-content-center" @fade @glide *ngIf="files && !isAudioPlaying">
     <div *ngIf="isRecentLoading" class="spinner-border" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>

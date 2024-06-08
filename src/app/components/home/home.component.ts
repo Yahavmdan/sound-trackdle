@@ -94,6 +94,7 @@ export class HomeComponent implements OnInit {
   }
 
   public getFile(id?: number, input?: HTMLInputElement): void {
+    if (this.isAudioPlaying) return;
     this.isLoading = true;
     if (id) {
       this.audioUrl = null
