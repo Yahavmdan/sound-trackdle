@@ -62,8 +62,8 @@
       </mat-option>
     </mat-autocomplete>
 
-  <h3 @fade *ngIf="isWin" class="text-green">Wow! good job!</h3>
-  <div @fade *ngIf="!isWin && !isLost" class="card-wrapper d-flex col-10 col-sm-3 justify-content-evenly mt-1 mb-3">
+  <h3 @fade *ngIf="isWin()" class="text-green">Wow! good job!</h3>
+  <div @fade *ngIf="!isWin() && !isLost" class="card-wrapper d-flex col-10 col-sm-3 justify-content-evenly mt-1 mb-3">
     <button class="pointer bg-yellow hold-button"
             [disabled]="isAudioPlaying"
             [class.holding]="isHolding"
@@ -80,7 +80,7 @@
             (click)="submit(input)">Go!</button>
   </div>
   <button class="col-6 col-sm-2"
-          [ngClass]="isWin || isLost ? 'ring' : ''"
+          [ngClass]="isWin() || isLost ? 'ring' : ''"
           (click)="getRecentFiles()"
           [disabled]="isAudioPlaying">Play recent challenges</button>
   <div class="d-flex col-sm-5 col-10 flex-wrap card-wrapper my-3 justify-content-center" @fade @glide *ngIf="files">
@@ -96,23 +96,4 @@
     </div>
   </div>
 </div>
-<button class="action-btn position-fixed" *ngIf="!isAdmin" (click)="isForm = !isForm">login</button>
-<button class="action-btn" *ngIf="isAdmin" (click)="logout()">logout</button>
-<form *ngIf="isForm" class="d-flex flex-column flex-wrap">
-  <p>user name</p>
-  <input class="h-50" #username>
-  <p>password</p>
-  <input class="h-50" #password type="password">
-  <button class="h-50" (click)="login(username.value, password.value)" type="button">submit</button>
-</form>
-<form *ngIf="isAdmin" class="px-4 d-flex flex-column h-100 justify-content-center" >
-  <input type="file" (change)="onFileSelected($event)" accept=".zip,.mp3" multiple>
-  <button (click)="upload()" type="button">Upload</button>
-  <button (click)="massDelete()" type="button">Mass delete</button>
-  <button (click)="fileIndex()" type="button">print file index</button>
-</form>
-<div *ngIf="isWin" [ngClass]="isWin ? 'many-confetti' : ''">
-  <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
-  <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
-  <div class="confetti"></div>
-</div>
+<app-confetti [isWin]="isWin()"></app-confetti>

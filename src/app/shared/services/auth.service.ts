@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject, Subscription } from "rxjs";
+import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
 import { BaseService } from "./base.service";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { AuthenticationResponse } from "../types/response/response.type";
@@ -11,16 +11,16 @@ import { LoginUser } from "../types/auth/auth.type";
 export class AuthService extends BaseService {
 
   tokenSub = new Subscription();
-  isAdmin = new Subject<boolean>();
-  private userData: any;
+  isAdmin: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.isLoggedIn());
 
   constructor(public override http: HttpClient) {
     super(http);
   }
 
   public getHeaders(): HttpHeaders {
+    const user = JSON.parse(localStorage.getItem('user') ?? '')
     return new HttpHeaders({
-      Authorization: this.getUserSData()?.token ? `Bearer ${this.getUserSData().token}` : ''
+      Authorization: user.token ? `Bearer ${user.token}` : ''
     });
   }
 
@@ -37,26 +37,13 @@ export class AuthService extends BaseService {
     this.tokenSub.unsubscribe();
     this.isAdmin.next(false);
     localStorage.removeItem('user');
-    this.userData = null;
   }
 
-  public setUserData(): void {
-    this.userData = JSON.parse(localStorage.getItem('user') || '{}');
-  }
-
-  public getUserSData(): any {
-    return this.userData;
-  }
-
-  public autoLogin(): void {
-    this.setUserData();
-    if (!this.userData.hasOwnProperty('token')) {
-      this.isAdmin.next(false);
-      return;
-    }
-
-    this.isAdmin.next(true);
-
+  private isLoggedIn(): boolean {
+    const storedVal = localStorage.getItem('user');
+    return storedVal
+      ? JSON.parse(storedVal).token
+      : false;
   }
 
 }

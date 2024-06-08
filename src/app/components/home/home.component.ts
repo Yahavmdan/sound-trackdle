@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, WritableSignal } from '@angular/core';
 import { FileService } from "../../shared/services/file.service";
 import { AsyncPipe, NgClass, NgForOf, NgIf, NgSwitch, NgSwitchCase, TitleCasePipe } from "@angular/common";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
@@ -12,12 +12,14 @@ import { environment } from "../../../environments/environment";
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { firebaseConfig } from "../../../environments/environment.prod";
+import { LoginComponent } from "../login/login.component";
+import { ConfettiComponent } from "../../shared/components/confetti/confetti.component";
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
-  imports: [NgIf, NgForOf, NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule, NgSwitchCase, NgSwitch],
+  imports: [NgIf, NgForOf, NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule, NgSwitchCase, NgSwitch, LoginComponent, ConfettiComponent],
   standalone: true,
   animations: [
     fade('fade', 500),
@@ -32,13 +34,10 @@ export class HomeComponent implements OnInit {
   public hints: string[] = [];
   public file!: File;
   public files!: File[];
-  public isAdminSub!: Subscription;
-  public isAdmin!: boolean;
   public isGuide: boolean = false;
   public isLost: boolean = false;
-  public isWin: boolean = false;
+  public isWin: WritableSignal<boolean> = signal(false);
   public isDarkMode!: boolean;
-  public isForm: boolean = false;
   public isLoading: boolean = false;
   public isRecentLoading: boolean = false;
   public isMobile: boolean = false;
@@ -47,13 +46,11 @@ export class HomeComponent implements OnInit {
   private _holdDuration = 1000;
   public isHolding = false;
   public step: number = 0;
-  private _zipFile = null;
   private _movies: File[] = [];
 
 
   constructor(private _fileService: FileService,
-              public themeService: ThemeService,
-              private _authService: AuthService) {
+              public themeService: ThemeService) {
   }
 
   ngOnInit(): void {
@@ -61,8 +58,6 @@ export class HomeComponent implements OnInit {
     this._listenToInput();
     this._listenToTheme();
     this._initializeAnalytics();
-    this._isAdmin();
-    this._authService.autoLogin();
     this.isMobile = window.innerWidth < 768;
     this.isLoading = true;
   }
@@ -72,12 +67,6 @@ export class HomeComponent implements OnInit {
       ? getAnalytics(initializeApp(firebaseConfig))
       : null;
   }
-
-    private _isAdmin(): void {
-        this.isAdminSub = this._authService.isAdmin.subscribe((isAdminAuthenticated: boolean): void => {
-            this.isAdmin = isAdminAuthenticated;
-        });
-    }
 
   public getRecentFiles(): void {
     if (this.files?.length) return;
@@ -306,7 +295,7 @@ export class HomeComponent implements OnInit {
 
   private _handleSuccess(input: HTMLInputElement): void {
     this._alterElements(true, input);
-    this.isWin = true;
+    this.isWin.set(true);
   }
 
   private _getFileById(lost?: boolean, id?: number, input?: HTMLInputElement): void {
@@ -318,67 +307,67 @@ export class HomeComponent implements OnInit {
   }
 
   private _reset(): void {
-    this.isWin = false;
+    this.isWin.set(false);
     this.isLost = false;
     this.step = 0;
     this.hints = [];
   }
 
-  public upload(): void {
-    if (!this._zipFile) {
-      console.error('No files selected');
-      return;
-    }
+  // public upload(): void {
+  //   if (!this._zipFile) {
+  //     console.error('No files selected');
+  //     return;
+  //   }
+  //
+  //   const formData = new FormData();
+  //   formData.append('file', this._zipFile);
+  //   console.log(formData);
+  //
+  //   this._fileService.upload(formData)
+  //     .subscribe({
+  //       next: (response) => {
+  //         console.log(response);
+  //         console.log('Files uploaded successfully');
+  //       },
+  //       error: (error) => {
+  //         console.error('Error uploading files:', error);
+  //       }
+  //     });
+  // }
 
-    const formData = new FormData();
-    formData.append('file', this._zipFile);
-    console.log(formData);
+  // public massDelete(): void {
+  //   let answer: boolean = confirm('Are you sure you want to delete?');
+  //   if (!answer) return;
+  //   this._fileService.massDelete().subscribe(res => {
+  //     console.log(res)
+  //   });
+  // }
+  //
+  // public fileIndex(): void {
+  //   this._fileService.fileIndex().subscribe(res => {
+  //     console.log(res)
+  //   });
+  // }
 
-    this._fileService.upload(formData)
-      .subscribe({
-        next: (response) => {
-          console.log(response);
-          console.log('Files uploaded successfully');
-        },
-        error: (error) => {
-          console.error('Error uploading files:', error);
-        }
-      });
-  }
+  // public onFileSelected(event: any): void {
+  //   const files = event.target.files;
+  //   if (files.length > 0) {
+  //     this._zipFile = files[0];
+  //   } else {
+  //     this._zipFile = null;
+  //   }
+  // }
 
-  public massDelete(): void {
-    let answer: boolean = confirm('Are you sure you want to delete?');
-    if (!answer) return;
-    this._fileService.massDelete().subscribe(res => {
-      console.log(res)
-    });
-  }
+  // public login(username: string, password: string): void {
+  //   if (!username || !password) return;
+  //   this._authService.login({username, password}).subscribe(res => {
+  //     this._authService.storeUserData(res);
+  //   })
+  // }
 
-  public fileIndex(): void {
-    this._fileService.fileIndex().subscribe(res => {
-      console.log(res)
-    });
-  }
-
-  public onFileSelected(event: any): void {
-    const files = event.target.files;
-    if (files.length > 0) {
-      this._zipFile = files[0];
-    } else {
-      this._zipFile = null;
-    }
-  }
-
-  public login(username: string, password: string): void {
-    if (!username || !password) return;
-    this._authService.login({username, password}).subscribe(res => {
-      this._authService.storeUserData(res);
-    })
-  }
-
-    public logout(): void {
-        this._authService.logout();
-    }
+    // public logout(): void {
+    //     this._authService.logout();
+    // }
 
   public startHold(input: HTMLInputElement): void {
     if (this.isAudioPlaying) return;

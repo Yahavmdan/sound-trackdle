@@ -849,6 +849,72 @@ html, body {
   width: 100px;
 }
 
+////////////// inputs/buttons ///////////////
+/////////////////////////////////////////////
+
+button {
+  user-select: none;
+  background-color:$blue;
+  border: transparent 1px;
+  height: 2rem;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all ease 200ms;
+  border-radius: 20px;
+
+  &:disabled {
+    background-color: darken($blue, 50%);
+    color: $grey3;
+    cursor: not-allowed;
+    opacity: 0.3;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(:disabled) {
+      background-color: lighten($light-blue, 20%) !important;
+      color: #000e17;
+    }
+  }
+}
+
+input {
+  height: 2.6rem;
+  padding-left: .5em;
+  padding-right: .5em;
+  border: solid 1px #b7b7b7 !important;
+  box-shadow: unset;
+  border-radius: 25px;
+  margin: 1em;
+  color: #737373;
+  transition: all ease 200ms;
+  &::placeholder {
+    color: #737373;
+    text-align: center;
+  }
+
+  &:focus {
+    outline: none !important;
+    border-radius: 25px 25px 0 0;
+  }
+
+  &.error {
+    border-top: solid 1px $red !important;
+    border-bottom: solid 1px $red !important;
+    border-right: solid 1px $red !important;
+    border-left: solid 1px $red !important;
+    animation: tiny-wiggle 3 100ms;
+  }
+
+  &.success {
+    border-top: solid 1px $green !important;
+    border-bottom: solid 1px $green !important;
+    border-right: solid 1px $green !important;
+    border-left: solid 1px $green !important;
+  }
+}
+
 //////////////////////////////////////////////
 /////////////////////////////////////////////
 
