@@ -8,10 +8,9 @@
 <div @fade @glide class="d-flex flex-column align-items-center justify-content-center w-100">
   <i class="bi bi-file-earmark-music-fill f-80 mt-5"></i>
   <div class="f-24 f-sm-16 fw-700 col-6 text-center my-2">Sound-Trackdle</div>
-  <i (click)="isGuide = !isGuide" class="bi bi-info-circle text-blue my-1 pointer"></i>
-  <p *ngIf="isGuide" @fade @glide class="col-10 col-sm-5 text-center f-12 f-sm-12 text-blue">Every day, a different
+  <i class="bi bi-info-circle text-blue my-1" matTooltip="Every day, a different
     soundtrack from a movie will be provided. You need to guess which movie the soundtrack is from. You have three
-    guesses. For each incorrect guess, you'll be given a hint and the soundtrack will last longer.</p>
+    guesses. For each incorrect guess, you'll be given a hint and the soundtrack will last longer."></i>
   <div class="d-flex flex-wrap col-10 col-sm-6 col-md-4 justify-content-center">
     <div @fade @glide *ngFor="let hint of hints;" class="d-flex align-items-center">
       <i class="f-12 bi bi-lightbulb-fill text-yellow mx-2"></i>

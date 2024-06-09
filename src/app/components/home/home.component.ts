@@ -13,13 +13,14 @@ import { getAnalytics } from "firebase/analytics";
 import { firebaseConfig } from "../../../environments/environment.prod";
 import { LoginComponent } from "../login/login.component";
 import { ConfettiComponent } from "../../shared/components/confetti/confetti.component";
+import { MatTooltip } from "@angular/material/tooltip";
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
   imports: [NgIf, NgForOf, NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule, NgSwitchCase,
-    NgSwitch, LoginComponent, ConfettiComponent],
+    NgSwitch, LoginComponent, ConfettiComponent, MatTooltip],
   standalone: true,
   animations: [
     fade('fade', 500),
@@ -34,7 +35,6 @@ export class HomeComponent implements OnInit {
   public hints: string[] = [];
   public file!: File;
   public files!: File[];
-  public isGuide: boolean = false;
   public isLost: boolean = false;
   public isWin: WritableSignal<boolean> = signal(false);
   public isDarkMode!: boolean;
@@ -154,6 +154,7 @@ export class HomeComponent implements OnInit {
 
   private _play(audio: HTMLAudioElement, progress: HTMLDivElement): void {
     audio.currentTime = 0;
+    audio.load();
     void audio.play();
     this.isAudioPlaying = true;
     this.movieInput.disable();
