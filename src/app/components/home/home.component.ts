@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, WritableSignal } from '@angular/core';
 import { FileService } from "../../shared/services/file.service";
-import { AsyncPipe, NgClass, NgForOf, NgIf, NgSwitch, NgSwitchCase, TitleCasePipe } from "@angular/common";
+import { AsyncPipe, NgClass, NgForOf, NgIf, TitleCasePipe } from "@angular/common";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { FormControl, ReactiveFormsModule } from "@angular/forms";
 import { map, Observable, startWith } from "rxjs";
@@ -15,13 +15,14 @@ import { LoginComponent } from "../login/login.component";
 import { ConfettiComponent } from "../../shared/components/confetti/confetti.component";
 import { MatTooltip } from "@angular/material/tooltip";
 import { LocalStorageService } from "../../shared/services/local-storage.service";
+import { PlayerComponent } from "../player/player.component";
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
-  imports: [NgIf, NgForOf, NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule, NgSwitchCase,
-    NgSwitch, LoginComponent, ConfettiComponent, MatTooltip],
+  imports: [NgIf, NgForOf, NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule,
+    LoginComponent, ConfettiComponent, MatTooltip, PlayerComponent],
   standalone: true,
   animations: [
     fade('fade', 500),
@@ -30,8 +31,8 @@ import { LocalStorageService } from "../../shared/services/local-storage.service
 })
 
 export class HomeComponent implements OnInit {
-  public audioUrl!: string | null;
-  public movieInput = new FormControl('');
+  public audioUrl: WritableSignal<string | null> = signal('');
+  public movieInput: FormControl = new FormControl('');
   public filteredOptions!: Observable<{ name: string, id: number }[]>;
   public hints: string[] = [];
   public file!: File;
@@ -44,8 +45,8 @@ export class HomeComponent implements OnInit {
   public isMobile: boolean = false;
   public isAudioPlaying: boolean = false;
   private _holdTimeout!: ReturnType<typeof setTimeout>;
-  private _holdDuration = 1000;
-  public isHolding = false;
+  private _holdDuration: number = 1000;
+  public isHolding: boolean = false;
   public step: number = 0;
   private _movies: File[] = [];
 
@@ -99,7 +100,7 @@ export class HomeComponent implements OnInit {
     if (this.isAudioPlaying) return;
     this.isLoading = true;
     if (id) {
-      this.audioUrl = null
+      this.audioUrl.set(null)
       this._markAsClicked(id);
       this._assignIfClicked();
     }
@@ -139,64 +140,26 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  public playerActions(audioUrl: string, progress: HTMLDivElement): void {
-    if (!this.audioUrl) {
+  public setIsAudioIsPlaying(event: boolean): void {
+    this.isAudioPlaying = event;
+  }
+
+  public disableInput(event: boolean): void {
+    if (event) {
+      this.movieInput.disable();
       return;
     }
-    let url = this.audioUrl;
-    this.audioUrl = null;
-    const audio = new Audio(audioUrl ?? '');
-    if (audio.paused) {
-      this._play(audio, progress);
-      setTimeout(() => {
-        this._pause(audio, url);
-      }, this._determineTimeOfTrackByStep());
-    }
-  }
-
-  private _play(audio: HTMLAudioElement, progress: HTMLDivElement): void {
-    audio.currentTime = 0;
-    audio.load();
-    void audio.play();
-    this.isAudioPlaying = true;
-    this.movieInput.disable();
-    this._startAnimation(progress);
-  }
-
-  private _pause(audio: HTMLAudioElement, url: string): void {
-    audio.pause();
-    this.isAudioPlaying = false;
     this.movieInput.enable();
-    this.audioUrl = url;
-  }
-
-  private _startAnimation(progress: HTMLDivElement): void {
-    progress.classList.add(`ani${this._determineTimeOfTrackByStep()}`)
-    setTimeout(() => {
-      progress.classList.remove(`ani${this._determineTimeOfTrackByStep()}`)
-    }, this._determineTimeOfTrackByStep())
-  }
-
-  private _determineTimeOfTrackByStep(): number {
-    let val;
-    switch (this.step) {
-      case 0: val = 5000; break;
-      case 1: val = 9000; break;
-      case 2: val =  12000; break;
-      case 3: val =  15000; break;
-      default: val = 0;
-    }
-    return val;
   }
 
   private _handleStreamSuccess(res: { path: string }): void {
-    this.audioUrl = res.path;
+    this.audioUrl.set(res.path);
     this.isLoading = false;
   }
 
   private _handleError(): void {
     this.isLoading = false;
-    this.audioUrl = null;
+    this.audioUrl.set(null);
   }
 
   private _listenToTheme(): void {

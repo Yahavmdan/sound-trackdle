@@ -17,30 +17,15 @@
       <span class="f-12 text-center">{{ hint }}</span>
     </div>
   </div>
-  <div *ngIf="!isLoading" class="d-flex flex-column align-items-center w-100">
-    <div *ngIf="audioUrl" tabindex="0" (keyup.enter)="playerActions(audioUrl, progressBar)"
-         (click)="playerActions(audioUrl, progressBar)" class="play-btn mt-3"></div>
-    <div *ngIf="isAudioPlaying" class="playing mt-3">
-      <span class="playing-bar playing-bar1"></span>
-      <span class="playing-bar playing-bar2"></span>
-      <span class="playing-bar playing-bar3"></span>
-      <span class="playing-bar playing-bar4"></span>
-      <span class="playing-bar playing-bar5"></span>
-    </div>
-    <div class="counter-line my-3 col-10 col-sm-4">
-      <div #progressBar class="progress-bar"></div>
-    </div>
-    <div [ngSwitch]="step" [ngClass]="isDarkMode ? 'text-yellow' : 'text-dark-blue'" class="f-12 d-flex flex-wrap col-10 col-sm-6 col-md-4 text-center justify-content-center">
-      <div *ngIf="!isLost">
-        <div *ngSwitchCase="0">Step one - <span class="text-red f-14">5 </span> seconds of the track.</div>
-      </div>
-      <div *ngSwitchCase="1">Step two - <span class="text-red f-14">9 </span>  seconds of the track + 1st hint.</div>
-      <div *ngSwitchCase="2">Step three - <span class="text-red f-14">12 </span>  seconds of the track + 2nd hint.</div>
-      <div *ngSwitchCase="3">Step four - <span class="text-red f-14">15 </span>  seconds of the track + 3rd hint.</div>
-    </div>
-
-  </div>
-
+  <app-player *ngIf="!isLoading"
+              [audioUrl]="audioUrl()"
+              [step]="step"
+              [isDarkMode]="isDarkMode"
+              [isLost]="isLost"
+              [isAudioPlaying]="isAudioPlaying"
+              (setIsAudioIsPlaying)="setIsAudioIsPlaying($event)"
+              (disableInput)="disableInput($event)"
+              class="d-flex flex-column align-items-center w-100"></app-player>
   <div *ngIf="isLoading" class="spinner-border my-3" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
     <span class="visually-hidden">Loading...</span>
   </div>
