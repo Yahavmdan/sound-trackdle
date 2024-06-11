@@ -14,6 +14,7 @@ import { firebaseConfig } from "../../../environments/environment.prod";
 import { LoginComponent } from "../login/login.component";
 import { ConfettiComponent } from "../../shared/components/confetti/confetti.component";
 import { MatTooltip } from "@angular/material/tooltip";
+import { LocalStorageService } from "../../shared/services/local-storage.service";
 
 @Component({
   selector: 'app-home',
@@ -50,11 +51,12 @@ export class HomeComponent implements OnInit {
 
 
   constructor(private _fileService: FileService,
-              public themeService: ThemeService) {
+              public themeService: ThemeService,
+              private _localStorageService: LocalStorageService) {
   }
 
   ngOnInit(): void {
-    this._getMovies();
+    this._startupVersionCheck();
     this._listenToInput();
     this._listenToTheme();
     this._initializeAnalytics();
@@ -203,11 +205,41 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  private _startupVersionCheck(): void {
+    const moviesExist = this._localStorageService.isItemExist('movies');
+    this._fileService.getVersion().subscribe(res => {
+      if (res && moviesExist) {
+        this._handleCorrectVer();
+        return;
+      }
+      if (!res && moviesExist) {
+        this._handleWrongVer();
+        return;
+      }
+      this._getMovies();
+    })
+  }
+
+  private _handleCorrectVer(): void {
+    this._movies = this._localStorageService.getItem('movies') as File[];
+    this.getFile();
+  }
+
+  private _handleWrongVer(): void {
+    this._localStorageService.removeItem('movies');
+    this._getMovies();
+  }
+
   private _getMovies(): void {
     this._fileService.index().subscribe(res => {
       this._movies = res;
+      this._storeMovies(this._movies);
       this.getFile();
     });
+  }
+
+  private _storeMovies(movies: File[]): void {
+    this._localStorageService.setItem('movies', movies);
   }
 
   public toggleMode(): void {
