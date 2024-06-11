@@ -34,7 +34,7 @@ export class PlayerComponent {
     audio.load();
     void audio.play();
     this.setIsAudioIsPlaying.emit(true);
-    this.disableInput.emit(true)
+    this.disableInput.emit(true);
     this._startAnimation(progress);
   }
 
