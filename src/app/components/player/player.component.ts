@@ -30,7 +30,6 @@ export class PlayerComponent {
   }
 
   private _play(audio: HTMLAudioElement, progress: HTMLDivElement): void {
-    console.log('played')
     audio.currentTime = 0;
     audio.load();
     void audio.play();
@@ -40,10 +39,8 @@ export class PlayerComponent {
   }
 
   private _pause(audio: HTMLAudioElement): void {
-    console.log('paused')
     audio.pause();
     this.setIsAudioIsPlaying.emit(false);
-    console.log(this.isAudioPlaying());
     this.disableInput.emit(false);
   }
 
