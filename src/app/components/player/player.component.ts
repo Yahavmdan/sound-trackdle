@@ -48,15 +48,13 @@ export class PlayerComponent {
   }
 
   private _determineTimeOfTrackByStep(): number {
-    let val;
     switch (this.step()) {
-      case 0: val = 5000; break;
-      case 1: val = 9000; break;
-      case 2: val =  12000; break;
-      case 3: val =  15000; break;
-      default: val = 0;
+      case 0: return 5000;
+      case 1: return 9000;
+      case 2: return 12000;
+      case 3: return 15000;
+      default: return 0;
     }
-    return val;
   }
 
   private _startAnimation(progress: HTMLDivElement): void {
