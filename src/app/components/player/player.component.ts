@@ -1,64 +1,117 @@
-import { Component, input, InputSignal, output, } from '@angular/core';
-import { NgClass, NgIf, NgSwitch, NgSwitchCase } from "@angular/common";
+import { Component, input, InputSignal, OnInit, output, } from '@angular/core';
+import { DecimalPipe, NgClass, NgIf, NgSwitch, NgSwitchCase } from "@angular/common";
 
 @Component({
   selector: 'app-player',
-  imports: [NgIf, NgSwitch, NgClass, NgSwitchCase],
+  imports: [NgIf, NgSwitch, NgClass, NgSwitchCase, DecimalPipe],
   templateUrl: './player.component.html',
   styleUrl: './player.component.scss',
   standalone: true
 })
 
-export class PlayerComponent {
+export class PlayerComponent implements OnInit {
 
   public audioUrl: InputSignal<string | null> = input<string | null>(null);
   public step: InputSignal<number> = input(0);
   public isDarkMode: InputSignal<boolean> = input(false);
   public isLost: InputSignal<boolean> = input(false);
   public isAudioPlaying: InputSignal<boolean> = input(false);
-  public setIsAudioIsPlaying = output<boolean>()
-  public disableInput = output<boolean>()
+  public audio: HTMLAudioElement = new Audio('');
+  public setIsAudioIsPlaying = output<boolean>();
+  public disableInput = output<boolean>();
+  private _intervalId: number | undefined;
 
-  public playerActions(progress: HTMLDivElement): void {
-    const audio = new Audio(this.audioUrl() ?? undefined);
-    if (audio.paused) {
-      this._play(audio, progress);
-      setTimeout(() => {
-        this._pause(audio);
-      }, this._determineTimeOfTrackByStep());
-    }
+  ngOnInit(): void {
+    this._reset();
   }
 
-  private _play(audio: HTMLAudioElement, progress: HTMLDivElement): void {
-    audio.currentTime = 0;
-    audio.load();
-    void audio.play();
-    this.setIsAudioIsPlaying.emit(true);
-    this.disableInput.emit(true);
-    this._startAnimation(progress);
+  private _reset(): void {
+    this.audio = new Audio(this.audioUrl() ?? '');
+    this.audio.load();
+    this.audio.currentTime = 0;
+
+    this.audio.addEventListener('timeupdate', () => {
+      if (this.audio.currentTime >= this._setTimeOfTrackByStep()) {
+        this.audio.pause();
+        this._emitValues(false, false);
+        this.audio.currentTime = 0;
+      }
+    });
   }
 
-  private _pause(audio: HTMLAudioElement): void {
-    audio.pause();
-    this.setIsAudioIsPlaying.emit(false);
-    this.disableInput.emit(false);
+  public play(progress: HTMLDivElement): void {
+    void this.audio.play();
+    this._emitValues(true, true);
+    this._setProgressBarWidth(progress);
+    this._startAnimation(progress, false);
   }
 
-  private _determineTimeOfTrackByStep(): number {
+  public pause(progress: HTMLDivElement): void {
+    this.audio.pause();
+    this._emitValues(false, false);
+    this._startAnimation(progress, true);
+  }
+
+  private _emitValues(isAudioIsPlaying: boolean, disableInput: boolean): void {
+    this.setIsAudioIsPlaying.emit(isAudioIsPlaying);
+    this.disableInput.emit(disableInput);
+  }
+
+  public changeVolume(event: any) {
+    this.audio.volume = event.target.value;
+  }
+
+  private _setTimeOfTrackByStep(millisecond?: boolean): number {
     switch (this.step()) {
-      case 0: return 5000;
-      case 1: return 9000;
-      case 2: return 12000;
-      case 3: return 15000;
+      case 0: return millisecond ? 5000 : 5;
+      case 1: return millisecond ? 9000 : 9;
+      case 2: return millisecond ? 12000 : 12;
+      case 3: return millisecond ? 15000 : 15;
       default: return 0;
     }
   }
 
-  private _startAnimation(progress: HTMLDivElement): void {
-    progress.classList.add(`ani${this._determineTimeOfTrackByStep()}`)
-    setTimeout(() => {
-      progress.classList.remove(`ani${this._determineTimeOfTrackByStep()}`)
-    }, this._determineTimeOfTrackByStep())
+  private _startAnimation(progress: HTMLDivElement, paused: boolean): void {
+    if (paused) {
+      this._setProgressBarWidth(progress);
+      this._clearInterval();
+      return;
+    }
+
+    this._clearInterval();
+    this._intervalId = setInterval(() => {
+      if ((this.audio.currentTime > this._setTimeOfTrackByStep()) || this.audio.currentTime === 0) {
+        progress.style.width = '0%';
+        this._clearInterval();
+      }
+
+      if (paused) {
+        this._clearInterval();
+        return;
+      }
+      console.log('wow')
+      progress.style.width = this._getCurrentTimeAndTotalTrackTime();
+    }, 500);
+  }
+
+  private _clearInterval(): void {
+    if (this._intervalId !== undefined) {
+      clearInterval(this._intervalId);
+      this._intervalId = undefined;
+    }
+  }
+
+  private _setProgressBarWidth(progress: HTMLDivElement): void {
+    progress.style.width = this._getCurrentTimeAndTotalTrackTime();
+  }
+
+  private _getCurrentTimeAndTotalTrackTime(): string {
+    return this._calculateProgress(this.audio.currentTime, this._setTimeOfTrackByStep(false)).toString() + '%';
+  }
+
+  private _calculateProgress(currentTime: number, totalTime: number): number {
+    if (totalTime === 0) return 0;
+    return (currentTime / totalTime) * 100;
   }
 
 }
