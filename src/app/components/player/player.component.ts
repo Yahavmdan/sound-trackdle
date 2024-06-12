@@ -52,6 +52,15 @@ export class PlayerComponent implements OnInit {
     this._startAnimation(progress, true);
   }
 
+  public mute(): void {
+    if (this.audio.muted) {
+      this.audio.muted = false;
+      return;
+    }
+    this.audio.muted = true;
+
+  }
+
   private _emitValues(isAudioIsPlaying: boolean, disableInput: boolean): void {
     this.setIsAudioIsPlaying.emit(isAudioIsPlaying);
     this.disableInput.emit(disableInput);
@@ -89,9 +98,8 @@ export class PlayerComponent implements OnInit {
         this._clearInterval();
         return;
       }
-      console.log('wow')
       progress.style.width = this._getCurrentTimeAndTotalTrackTime();
-    }, 500);
+    }, 100);
   }
 
   private _clearInterval(): void {

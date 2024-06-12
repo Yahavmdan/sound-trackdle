@@ -86,9 +86,13 @@
 }
 
 .vol-range-container {
+  cursor: pointer;
   display: flex;
   align-items: center;
-  transition: height 200ms ease;
+  transition: all 200ms ease;
+  position: relative;
+  right: 30px;
+  top: 17px;
   &:hover {
    .vol-range {
      display: block;
@@ -99,7 +103,9 @@
 
 .vol-range {
   margin: 0 !important;
-  position: absolute;
+  position: relative;
+  right: 46px;
+  bottom: 46px;
   rotate: -90deg;
   display: none;
   transition: all 200ms ease;
