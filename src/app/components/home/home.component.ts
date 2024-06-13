@@ -116,7 +116,7 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  onSelectOpen(input: HTMLInputElement, event?: 'open') {
+  public onSelectOpen(input: HTMLInputElement, event?: 'open'): void {
     if (event) {
       input.classList.add('merge-with-select');
       return;
