@@ -67,6 +67,7 @@ export class PlayerComponent implements OnInit {
   }
 
   public changeVolume(event: any) {
+    this.audio.muted = false;
     this.audio.volume = event.target.value;
   }
 
