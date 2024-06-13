@@ -1,0 +1,9 @@
+<div [ngSwitch]="step()" [ngClass]="isDarkMode() ? 'text-yellow' : 'text-dark-blue'"
+     class="w-100 f-12 d-flex flex-wrap text-center justify-content-center">
+  <div *ngIf="!isLost()">
+    <div *ngSwitchCase="0">Guess one - <span class="text-red f-14">5 </span> seconds of the track.</div>
+  </div>
+  <div *ngSwitchCase="1">Guess two - <span class="text-red f-14">9 </span> seconds of the track + 1st hint.</div>
+  <div *ngSwitchCase="2">Guess three - <span class="text-red f-14">12 </span> seconds of the track + 2nd hint.</div>
+  <div *ngSwitchCase="3" class="text-red f-16 beat">LAST GUESS! - <span class="f-14">15 </span> seconds of the track + 3rd hint.</div>
+</div>

@@ -16,13 +16,14 @@ import { ConfettiComponent } from "../../shared/components/confetti/confetti.com
 import { MatTooltip } from "@angular/material/tooltip";
 import { LocalStorageService } from "../../shared/services/local-storage.service";
 import { PlayerComponent } from "../player/player.component";
+import { TrackInfoComponent } from "../track-info/track-info.component";
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
   imports: [NgIf, NgForOf, NgClass, AsyncPipe, MatAutocompleteModule, TitleCasePipe, ReactiveFormsModule,
-    LoginComponent, ConfettiComponent, MatTooltip, PlayerComponent],
+    LoginComponent, ConfettiComponent, MatTooltip, PlayerComponent, TrackInfoComponent],
   standalone: true,
   animations: [
     fade('fade', 500),

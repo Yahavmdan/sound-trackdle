@@ -13,8 +13,6 @@ export class PlayerComponent implements OnInit {
 
   public audioUrl: InputSignal<string | null> = input<string | null>(null);
   public step: InputSignal<number> = input(0);
-  public isDarkMode: InputSignal<boolean> = input(false);
-  public isLost: InputSignal<boolean> = input(false);
   public isAudioPlaying: InputSignal<boolean> = input(false);
   public audio: HTMLAudioElement = new Audio('');
   public setIsAudioIsPlaying = output<boolean>();
@@ -54,9 +52,11 @@ export class PlayerComponent implements OnInit {
 
   public mute(): void {
     if (this.audio.muted) {
+      this.audio.volume = 0.50;
       this.audio.muted = false;
       return;
     }
+    this.audio.volume = 0;
     this.audio.muted = true;
 
   }

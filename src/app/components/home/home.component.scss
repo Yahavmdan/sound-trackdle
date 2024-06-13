@@ -1,13 +1,5 @@
 @import '../../../styles.scss';
 
-.card-wrapper {
-  border: transparent 1px solid;
-  border-radius: 50px;
-  padding: 1em;
-  box-shadow: 7px 9px 28px -3px rgba(0, 0, 0, 0.1);
-  height: fit-content;
-}
-
 .action-btn {
   position: absolute;
   bottom: 10px;
@@ -86,7 +78,11 @@
 }
 
 .ring {
-  animation: ringNBit 1.5s 5;
+  animation: ringNBeat 1.5s 5;
+}
+
+.beat {
+  animation: Beat 1s 5;
 }
 
 .merge-with-select {
@@ -94,7 +90,17 @@
   border-radius: 25px 25px 0 0;
 }
 
-@keyframes ringNBit {
+@keyframes Beat {
+  10% { transform: scale(1.05) }
+  13% {  transform: scale(1) }
+  16% { transform: scale(1) }
+  19% {  transform: scale(1) }
+  22% {  transform: scale(1)}
+  25% {  transform: scale(1.05) }
+  100% {  transform: scale(1)}
+}
+
+@keyframes ringNBeat {
   10% { rotate: 1deg; transform: scale(1.1) translateX(2px) }
   13% { rotate: -1deg; transform: scale(1.1) translateX(-2px) }
   16% { rotate: 1deg; transform: scale(1.1) translateX(2px) }

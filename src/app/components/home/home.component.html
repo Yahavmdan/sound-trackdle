@@ -20,12 +20,16 @@
   <app-player *ngIf="!isLoading"
               [audioUrl]="audioUrl()"
               [step]="step"
-              [isDarkMode]="isDarkMode"
-              [isLost]="isLost"
               [isAudioPlaying]="isAudioPlaying"
               (setIsAudioIsPlaying)="setIsAudioIsPlaying($event)"
               (disableInput)="disableInput($event)"
               class="d-flex flex-column align-items-center w-100"></app-player>
+
+  <app-track-info *ngIf="!isLoading"
+              [step]="step"
+              [isDarkMode]="isDarkMode"
+              [isLost]="isLost"></app-track-info>
+
   <div *ngIf="isLoading" class="spinner-border my-3" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
     <span class="visually-hidden">Loading...</span>
   </div>
