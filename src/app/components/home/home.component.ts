@@ -187,36 +187,25 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  /**
+   * The movie list changes whenever tracks are added, so always fetch it fresh;
+   * the copy in localStorage is only a fallback when the request fails.
+   */
   private _startupVersionCheck(): void {
-    const moviesExist = this._localStorageService.isItemExist('movies');
-    this._fileService.getVersion().subscribe(res => {
-      if (res && moviesExist) {
-        this._handleCorrectVer();
-        return;
-      }
-      if (!res && moviesExist) {
-        this._handleWrongVer();
-        return;
-      }
-      this._getMovies();
-    })
-  }
-
-  private _handleCorrectVer(): void {
-    this._movies = this._localStorageService.getItem('movies') as File[];
-    this.getFile();
-  }
-
-  private _handleWrongVer(): void {
-    this._localStorageService.removeItem('movies');
     this._getMovies();
   }
 
   private _getMovies(): void {
-    this._fileService.index().subscribe(res => {
-      this._movies = this._withLabels(res);
-      this._storeMovies(this._movies);
-      this.getFile();
+    this._fileService.index().subscribe({
+      next: res => {
+        this._movies = this._withLabels(res);
+        this._storeMovies(this._movies);
+        this.getFile();
+      },
+      error: () => {
+        this._movies = (this._localStorageService.getItem('movies') as File[]) ?? [];
+        this.getFile();
+      }
     });
   }
 
