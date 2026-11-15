@@ -5,6 +5,14 @@ import { BaseService } from "./base.service";
 import { HttpClient } from "@angular/common/http";
 import { AuthService } from "./auth.service";
 
+export type GuessResult = {
+  correct: boolean;
+  name?: string;
+  year?: number;
+  poster_url?: string | null;
+  imdb_url?: string | null;
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -38,12 +46,12 @@ export class FileService extends BaseService {
     return this.http.get<File[]>(this.baseUrl + 'files');
   }
 
-  public getFileById(id: number): Observable<File> {
-    return this.http.post<File>(this.baseUrl + 'file/id', {id});
+  public streamFile(token: string): Observable<{ path: string }> {
+    return this.http.post<{ path: string }>(this.baseUrl + 'stream', {token});
   }
 
-  public streamFile(id: number): Observable<{ path: string }> {
-    return this.http.post<{ path: string }>(this.baseUrl + 'stream', {id});
+  public guess(token: string, movieId: number | null, step: number): Observable<GuessResult> {
+    return this.http.post<GuessResult>(this.baseUrl + 'guess', {token, movie_id: movieId, step});
   }
 
 }

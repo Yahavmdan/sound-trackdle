@@ -137,3 +137,20 @@
     font-size: 12px;
   }
 }
+
+.difficulty-badge {
+  padding: 2px 10px;
+  border-radius: 10px;
+  color: #fff;
+  letter-spacing: .5px;
+}
+.difficulty-easy { background: #2e8b57; }
+.difficulty-medium { background: #d08c00; }
+.difficulty-hard { background: #c0392b; }
+
+.reveal-poster {
+  width: 140px;
+  max-width: 40vw;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+}

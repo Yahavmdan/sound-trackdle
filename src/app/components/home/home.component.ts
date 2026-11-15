@@ -34,7 +34,7 @@ import { TrackInfoComponent } from "../track-info/track-info.component";
 export class HomeComponent implements OnInit {
   public audioUrl: WritableSignal<string | null> = signal('');
   public movieInput: FormControl = new FormControl('');
-  public filteredOptions!: Observable<{ name: string, id: number }[]>;
+  public filteredOptions!: Observable<File[]>;
   public hints: string[] = [];
   public file!: File;
   public files!: File[];
@@ -85,7 +85,7 @@ export class HomeComponent implements OnInit {
 
   private _assignIfClicked(): void {
     this.files.forEach(file => {
-      file.clicked = this._isClicked(file.id.toString());
+      file.clicked = this._isClicked(file.token!);
     });
   }
 
@@ -93,16 +93,16 @@ export class HomeComponent implements OnInit {
     return localStorage.getItem(id) === 'clicked';
   }
 
-  private _markAsClicked(id: number): void {
-    localStorage.setItem(id.toString(), 'clicked');
+  private _markAsClicked(token: string): void {
+    localStorage.setItem(token, 'clicked');
   }
 
-  public getFile(id?: number, input?: HTMLInputElement): void {
+  public getFile(token?: string, input?: HTMLInputElement): void {
     if (this.isAudioPlaying) return;
     this.isLoading = true;
-    if (id) {
+    if (token) {
       this.audioUrl.set(null)
-      this._markAsClicked(id);
+      this._markAsClicked(token);
       this._assignIfClicked();
     }
     if (input) {
@@ -111,7 +111,7 @@ export class HomeComponent implements OnInit {
 
     this._reset();
     this._fileService.getFile().subscribe({
-      next: (file: File) => this._handleFileRetrieval(file, id),
+      next: (file: File) => this._handleFileRetrieval(file, token),
       error: () => this._handleError()
     });
   }
@@ -124,18 +124,14 @@ export class HomeComponent implements OnInit {
     input.classList.remove('merge-with-select');
   }
 
-  private _handleFileRetrieval(file: File, id?: number): void {
-    if (id) {
-      this._getFileById(false, id);
-      this._stream(id);
-      return;
-    }
-    this.file = file;
-    this._stream(this.file.id);
+  private _handleFileRetrieval(file: File, token?: string): void {
+    const archived = token ? this.files?.find(f => f.token === token) : undefined;
+    this.file = archived ? {...archived, name: '', poster_url: null, imdb_url: null} : file;
+    this._stream(this.file.token!);
   }
 
-  private _stream(id: number): void {
-    this._fileService.streamFile(id).subscribe({
+  private _stream(token: string): void {
+    this._fileService.streamFile(token).subscribe({
       next: (res: { path: string }) => this._handleStreamSuccess(res),
       error: () => this._handleError()
     });
@@ -196,7 +192,7 @@ export class HomeComponent implements OnInit {
 
   private _getMovies(): void {
     this._fileService.index().subscribe(res => {
-      this._movies = res;
+      this._movies = this._withLabels(res);
       this._storeMovies(this._movies);
       this.getFile();
     });
@@ -227,33 +223,69 @@ export class HomeComponent implements OnInit {
     return this._movies.filter(movie => movie.name.toLowerCase().includes(filterValue));
   }
 
+  /** Show "Name (year)" only when several movies share a name. */
+  private _withLabels(movies: File[]): File[] {
+    const counts = new Map<string, number>();
+    movies.forEach(m => counts.set(m.name.toLowerCase(), (counts.get(m.name.toLowerCase()) ?? 0) + 1));
+    return movies.map(m => ({...m, label: counts.get(m.name.toLowerCase())! > 1 ? `${m.name} (${m.year})` : m.name}));
+  }
+
+  /** Autocomplete shows the movie name, while the control's value stays the movie id. */
+  public displayMovie = (value: number | string | null): string => {
+    if (typeof value !== 'number') return value ?? '';
+    const movie = this._movies.find(m => m.id === value);
+    return movie ? (movie.label ?? movie.name) : '';
+  };
+
   public onMovieSelected(selectedMovieId: number, input: HTMLInputElement) {
     if (this.isAudioPlaying) return;
-    const selectedMovie = this._movies.find(movie => movie.id === selectedMovieId);
-    if (selectedMovie) this.submit(input);
+    if (this._movies.some(movie => movie.id === selectedMovieId)) this.submit(input);
   }
 
   public submit(input: HTMLInputElement): void {
-    if (!input.value) {
+    const value = this.movieInput.value;
+    if (value === null || value === '') {
       this._alterElements(false, input);
       return;
     }
     if (this.isLost) return;
-    if (this._checkAnswer(input)) return;
+    this.movieInput.setValue('');
+    this._guess(this._resolveMovieId(value), input);
+  }
 
+  /** Selected option -> its id; typed text -> id of the movie with exactly that name, else null. */
+  private _resolveMovieId(value: number | string): number | null {
+    if (typeof value === 'number') return value;
+    const typed = value.trim().toLowerCase();
+    const movie = this._movies.find(m => m.name.toLowerCase() === typed || m.label?.toLowerCase() === typed);
+    return movie?.id ?? null;
+  }
+
+  /** Sends a guess (or a skip when movieId is null) and advances the game on a miss. */
+  private _guess(movieId: number | null, input: HTMLInputElement): void {
+    if (this.isLost || this.isWin()) return;
     input.disabled = true;
-    setTimeout(() => {
-      input.disabled = false;
-    }, 1)
-
-    this.step++;
-    if (this.step === 4) {
-      this.isLost = true;
-      setTimeout(() => {
-        input.disabled = true;
-      }, 500)
-    }
-    this._failSteps();
+    this._fileService.guess(this.file.token!, movieId, this.step).subscribe({
+      next: res => {
+        if (res.name) this.file = {
+          ...this.file, name: res.name, year: res.year ?? this.file.year,
+          poster_url: res.poster_url, imdb_url: res.imdb_url
+        };
+        if (res.correct) {
+          this._handleSuccess(input);
+          return;
+        }
+        if (movieId !== null) this._alterElements(false, input);
+        this.step++;
+        if (this.step >= 4) {
+          this.isLost = true;
+          return;
+        }
+        input.disabled = false;
+        this._failSteps();
+      },
+      error: () => input.disabled = false
+    });
   }
 
 
@@ -268,7 +300,7 @@ export class HomeComponent implements OnInit {
     }, success ? 5000 : 500)
   }
 
-  private _failSteps(input?: HTMLInputElement): void {
+  private _failSteps(): void {
     switch (this.step) {
       case 1:
         this.hints.push(`The main actor of this movie is - ${this.file?.main_actor}`);
@@ -279,35 +311,12 @@ export class HomeComponent implements OnInit {
       case 3:
         this.hints.push(`The genre of this movie: ${this.file?.genre}`);
         break;
-      case 4:
-        this._getFileById(true, undefined, input);
-        break;
     }
-  }
-
-  private _checkAnswer(input: HTMLInputElement): boolean {
-    if (input.value === this.file?.id?.toString()) {
-      input.value = '';
-      input.disabled = true;
-      this._handleSuccess(input);
-      return true;
-    }
-    this._alterElements(false, input);
-    input.value = '';
-    return false;
   }
 
   private _handleSuccess(input: HTMLInputElement): void {
     this._alterElements(true, input);
     this.isWin.set(true);
-  }
-
-  private _getFileById(lost?: boolean, id?: number, input?: HTMLInputElement): void {
-    this._reset();
-    this._fileService.getFileById(id ?? this.file.id)
-      .subscribe((res: File) => this.file = res);
-    if (lost) this.isLost = true;
-    if (input) input.disabled = true;
   }
 
   private _reset(): void {
@@ -339,8 +348,6 @@ export class HomeComponent implements OnInit {
   }
 
   private _performAction(input: HTMLInputElement): void {
-    if (this.isLost) input.disabled = true;
-    this.step++;
-    this._failSteps(input);
+    this._guess(null, input);
   }
 }

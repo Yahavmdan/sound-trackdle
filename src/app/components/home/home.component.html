@@ -8,6 +8,9 @@
 <div @fade @glide class="d-flex flex-column align-items-center justify-content-center w-100">
   <i class="bi bi-file-earmark-music-fill f-80 mt-5"></i>
   <div class="f-24 f-sm-16 fw-700 col-6 text-center my-2">Sound-Trackdle</div>
+  <span *ngIf="file?.difficulty && !isLoading" class="difficulty-badge f-12 fw-700" [ngClass]="'difficulty-' + file.difficulty">
+    {{ file.difficulty | titlecase }}
+  </span>
   <i class="bi bi-info-circle text-blue my-1" matTooltip="Every day, a different
     soundtrack from a movie will be provided. You need to guess which movie the soundtrack is from. You have three
     guesses. For each incorrect guess, you'll be given a hint and the soundtrack will last longer."></i>
@@ -47,15 +50,23 @@
   </div>
     <mat-autocomplete
       #auto="matAutocomplete"
+      [displayWith]="displayMovie"
       (closed)="onSelectOpen(input)"
       (opened)="onSelectOpen(input, 'open')"
       (optionSelected)="onMovieSelected($event.option.value, input)">
       <mat-option *ngFor="let movie of filteredOptions | async" [value]="movie.id">
-        {{ movie.name }}
+        {{ movie.label ?? movie.name }}
       </mat-option>
     </mat-autocomplete>
 
   <h3 @fade *ngIf="isWin()" class="text-green">Wow! good job!</h3>
+  <div @fade *ngIf="(isWin() || isLost) && file.name" class="reveal d-flex flex-column align-items-center my-2">
+    <img *ngIf="file.poster_url" [src]="file.poster_url" [alt]="file.name + ' poster'" class="reveal-poster">
+    <div class="fw-700 f-20 my-1 text-center">{{ file.name }} <span class="f-14">({{ file.year }})</span></div>
+    <a *ngIf="file.imdb_url" [href]="file.imdb_url" target="_blank" rel="noopener" class="text-blue f-14">
+      <i class="bi bi-box-arrow-up-right mx-1"></i>View on IMDb
+    </a>
+  </div>
   <div @fade *ngIf="!isWin() && !isLost" class="card-wrapper d-flex col-10 col-sm-3 justify-content-evenly mt-1 mb-3">
     <button class="pointer bg-yellow hold-button"
             [disabled]="isAudioPlaying"
@@ -82,7 +93,7 @@
     </div>
     <div class="f-12" *ngIf="!files.length && !isRecentLoading"> No recent challenges</div>
     <div class="m-2" *ngFor="let file of files">
-      <div class="pointer" [ngClass]="{'text-decoration-line-through text-blue': file.clicked}" (click)="getFile(file.id, input)">
+      <div class="pointer" [ngClass]="{'text-decoration-line-through text-blue': file.clicked}" (click)="getFile(file.token, input)">
         <i class="bi bi-film mx-1"></i>
         <i class="f-14 mx-1">{{ file.played_at }}</i>
       </div>
