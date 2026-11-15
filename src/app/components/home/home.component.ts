@@ -45,6 +45,7 @@ export class HomeComponent implements OnInit {
   public isRecentLoading: boolean = false;
   public isMobile: boolean = false;
   public isAudioPlaying: boolean = false;
+  public isRandom: boolean = false;
   private _holdTimeout!: ReturnType<typeof setTimeout>;
   private _holdDuration: number = 1000;
   public isHolding: boolean = false;
@@ -110,8 +111,29 @@ export class HomeComponent implements OnInit {
     }
 
     this._reset();
+    this.isRandom = false;
     this._fileService.getFile().subscribe({
       next: (file: File) => this._handleFileRetrieval(file, token),
+      error: () => this._handleError()
+    });
+  }
+
+  /** Plays a random track that is not tied to any day. */
+  public getRandomFile(input?: HTMLInputElement): void {
+    if (this.isAudioPlaying) return;
+    this.isLoading = true;
+    this.audioUrl.set(null);
+    if (input) input.disabled = false;
+    this.movieInput.enable();
+    this.movieInput.setValue('');
+    const current = this.file?.token;
+    this._reset();
+    this.isRandom = true;
+    this._fileService.getRandomFile(current).subscribe({
+      next: (file: File) => {
+        this.file = {...file, name: '', poster_url: null, imdb_url: null};
+        this._stream(this.file.token!);
+      },
       error: () => this._handleError()
     });
   }

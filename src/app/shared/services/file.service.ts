@@ -42,6 +42,11 @@ export class FileService extends BaseService {
     return this.http.get<File>(this.baseUrl + 'file');
   }
 
+  /** Any track, independent of the daily challenge; `exclude` avoids repeating the current one. */
+  public getRandomFile(exclude?: string): Observable<File> {
+    return this.http.get<File>(this.baseUrl + 'random', {params: exclude ? {exclude} : {}});
+  }
+
   public getRecentFiles(): Observable<File[]> {
     return this.http.get<File[]>(this.baseUrl + 'files');
   }

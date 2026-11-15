@@ -83,10 +83,18 @@
             [ngClass]="isHolding ? 'col-3' : 'col-5'"
             (click)="submit(input)">Go!</button>
   </div>
-  <button class="col-6 col-sm-2"
-          [ngClass]="isWin() || isLost ? 'ring' : ''"
-          (click)="getRecentFiles()"
-          [disabled]="isAudioPlaying">Play recent challenges</button>
+  <div *ngIf="isRandom" class="f-12 text-blue mb-2">Random song &ndash; not today's challenge</div>
+  <div class="d-flex col-10 col-sm-4 justify-content-center gap-2">
+    <button class="col-6"
+            [ngClass]="isWin() || isLost ? 'ring' : ''"
+            (click)="getRecentFiles()"
+            [disabled]="isAudioPlaying">Play recent challenges</button>
+    <button class="col-6 bg-yellow"
+            (click)="getRandomFile(input)"
+            [disabled]="isAudioPlaying"><i class="bi bi-shuffle mx-1"></i>Random song</button>
+  </div>
+  <button *ngIf="isRandom" class="col-6 col-sm-2 mt-2 f-12" (click)="getFile(undefined, input)"
+          [disabled]="isAudioPlaying">Back to today's challenge</button>
   <div class="d-flex col-sm-5 col-10 flex-wrap card-wrapper my-3 justify-content-center" @fade @glide *ngIf="files && !isAudioPlaying">
     <div *ngIf="isRecentLoading" class="spinner-border" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
       <span class="visually-hidden">Loading...</span>
