@@ -230,21 +230,35 @@ export class HomeComponent implements OnInit {
     return movies.map(m => ({...m, label: counts.get(m.name.toLowerCase())! > 1 ? `${m.name} (${m.year})` : m.name}));
   }
 
+  /** Autocomplete shows the movie name, while the control's value stays the movie id. */
+  public displayMovie = (value: number | string | null): string => {
+    if (typeof value !== 'number') return value ?? '';
+    const movie = this._movies.find(m => m.id === value);
+    return movie ? (movie.label ?? movie.name) : '';
+  };
+
   public onMovieSelected(selectedMovieId: number, input: HTMLInputElement) {
     if (this.isAudioPlaying) return;
-    const selectedMovie = this._movies.find(movie => movie.id === selectedMovieId);
-    if (selectedMovie) this.submit(input);
+    if (this._movies.some(movie => movie.id === selectedMovieId)) this.submit(input);
   }
 
   public submit(input: HTMLInputElement): void {
-    if (!input.value) {
+    const value = this.movieInput.value;
+    if (value === null || value === '') {
       this._alterElements(false, input);
       return;
     }
     if (this.isLost) return;
-    const movieId = Number(input.value);
-    input.value = '';
-    this._guess(Number.isInteger(movieId) && movieId > 0 ? movieId : null, input);
+    this.movieInput.setValue('');
+    this._guess(this._resolveMovieId(value), input);
+  }
+
+  /** Selected option -> its id; typed text -> id of the movie with exactly that name, else null. */
+  private _resolveMovieId(value: number | string): number | null {
+    if (typeof value === 'number') return value;
+    const typed = value.trim().toLowerCase();
+    const movie = this._movies.find(m => m.name.toLowerCase() === typed || m.label?.toLowerCase() === typed);
+    return movie?.id ?? null;
   }
 
   /** Sends a guess (or a skip when movieId is null) and advances the game on a miss. */

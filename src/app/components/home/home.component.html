@@ -50,6 +50,7 @@
   </div>
     <mat-autocomplete
       #auto="matAutocomplete"
+      [displayWith]="displayMovie"
       (closed)="onSelectOpen(input)"
       (opened)="onSelectOpen(input, 'open')"
       (optionSelected)="onMovieSelected($event.option.value, input)">
