@@ -1,110 +1,158 @@
-<div class="h-50px position-fixed">
+<div class="h-50px position-fixed theme-toggle">
   <div class="w-50px h-50px d-flex justify-content-center align-items-center">
     <i [ngClass]="isDarkMode ? 'bi-brightness-low-fill f-36' : 'bi-moon-fill f-28'"
        (click)="toggleMode()"
        class="bi"></i>
   </div>
 </div>
-<div @fade @glide class="d-flex flex-column align-items-center justify-content-center w-100">
-  <i class="bi bi-file-earmark-music-fill f-80 mt-5"></i>
-  <div class="f-24 f-sm-16 fw-700 col-6 text-center my-2">Sound-Trackdle</div>
-  <span *ngIf="file?.difficulty && !isLoading" class="difficulty-badge f-12 fw-700" [ngClass]="'difficulty-' + file.difficulty">
-    {{ file.difficulty | titlecase }}
-  </span>
-  <i class="bi bi-info-circle text-blue my-1" matTooltip="Every day, a different
-    soundtrack from a movie will be provided. You need to guess which movie the soundtrack is from. You have three
-    guesses. For each incorrect guess, you'll be given a hint and the soundtrack will last longer."></i>
-  <div class="d-flex flex-wrap col-10 col-sm-6 col-md-4 justify-content-center">
-    <div @fade @glide *ngFor="let hint of hints;" class="d-flex align-items-center">
-      <i class="f-12 bi bi-lightbulb-fill text-yellow mx-2"></i>
-      <span class="f-12 text-center">{{ hint }}</span>
+
+<div @fade @glide class="d-flex flex-column align-items-center justify-content-center w-100 pb-4">
+  <!-- Header -->
+  <header class="d-flex align-items-center gap-2 mt-4 mb-1">
+    <i class="bi bi-file-earmark-music-fill f-48"></i>
+    <div class="f-24 fw-700">Sound-Trackdle</div>
+    <i class="bi bi-info-circle text-blue pointer" matTooltip="Every day, a different
+      soundtrack from a movie will be provided. You need to guess which movie the soundtrack is from. You have four
+      guesses. For each incorrect guess or skip, you'll get a hint and the soundtrack will last longer."></i>
+  </header>
+  <div class="d-flex align-items-center gap-2 mb-3 f-12" *ngIf="!isLoading">
+    <span class="mode-chip" [ngClass]="isRandom ? 'mode-random' : archiveDate ? 'mode-archive' : 'mode-daily'">
+      <i class="bi mx-1" [ngClass]="isRandom ? 'bi-shuffle' : archiveDate ? 'bi-clock-history' : 'bi-calendar-event'"></i>{{ isRandom ? 'Random song' : archiveDate ? 'Challenge of ' + archiveDate : "Today's challenge" }}
+    </span>
+    <span *ngIf="file?.difficulty" class="difficulty-badge fw-700" [ngClass]="'difficulty-' + file.difficulty">
+      {{ file.difficulty | titlecase }}
+    </span>
+  </div>
+
+  <!-- Game card -->
+  <section class="game-card card-wrapper d-flex flex-column align-items-center"
+           [ngClass]="isDarkMode ? 'game-card-dark' : 'game-card-light'">
+    <div *ngIf="isLoading" class="spinner-border my-5" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
+      <span class="visually-hidden">Loading...</span>
     </div>
-  </div>
-  <app-player *ngIf="!isLoading"
-              [audioUrl]="audioUrl()"
-              [step]="step"
-              [isAudioPlaying]="isAudioPlaying"
-              (setIsAudioIsPlaying)="setIsAudioIsPlaying($event)"
-              (disableInput)="disableInput($event)"
-              class="d-flex flex-column align-items-center w-100"></app-player>
 
-  <app-track-info *ngIf="!isLoading"
-              [step]="step"
-              [isDarkMode]="isDarkMode"
-              [isLost]="isLost"></app-track-info>
+    <ng-container *ngIf="!isLoading">
+      <!-- Guesses used -->
+      <div class="d-flex gap-2 mb-2" aria-label="Guesses">
+        <span *ngFor="let i of [0, 1, 2, 3]" class="guess-dot"
+              [ngClass]="isWin() && i === step ? 'dot-win' : i < step ? 'dot-used' : i === step && !isLost ? 'dot-current' : ''"></span>
+      </div>
+      <app-track-info *ngIf="!isWin()"
+                      [step]="step"
+                      [isDarkMode]="isDarkMode"
+                      [isLost]="isLost"></app-track-info>
 
-  <div *ngIf="isLoading" class="spinner-border my-3" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
-    <span class="visually-hidden">Loading...</span>
-  </div>
-  <div class="d-flex justify-content-center col-10">
-    <input (focus)="focusInput()"
-           class="col-12 col-sm-4"
-           placeholder="Guess the movie"
-           type="text"
-           [matAutocomplete]="auto"
-           [formControl]="movieInput"
-           matAutocompletePosition="below"
-           #input>
-    <i class="bi"></i>
-  </div>
-    <mat-autocomplete
-      #auto="matAutocomplete"
-      [displayWith]="displayMovie"
-      (closed)="onSelectOpen(input)"
-      (opened)="onSelectOpen(input, 'open')"
-      (optionSelected)="onMovieSelected($event.option.value, input)">
-      <mat-option *ngFor="let movie of filteredOptions | async" [value]="movie.id">
-        {{ movie.label ?? movie.name }}
-      </mat-option>
-    </mat-autocomplete>
+      <app-player [audioUrl]="audioUrl()"
+                  [step]="step"
+                  [isAudioPlaying]="isAudioPlaying"
+                  (setIsAudioIsPlaying)="setIsAudioIsPlaying($event)"
+                  (disableInput)="disableInput($event)"
+                  class="d-flex flex-column align-items-center w-100 my-2"></app-player>
 
-  <h3 @fade *ngIf="isWin()" class="text-green">Wow! good job!</h3>
-  <div @fade *ngIf="(isWin() || isLost) && file.name" class="reveal d-flex flex-column align-items-center my-2">
-    <div *ngIf="isLost && !isWin()" class="f-14 text-red mb-2">No more guesses &ndash; the answer was:</div>
-    <img *ngIf="file.poster_url" [src]="file.poster_url" [alt]="file.name + ' poster'" class="reveal-poster">
-    <div class="fw-700 f-20 my-1 text-center">{{ file.name }} <span class="f-14">({{ file.year }})</span></div>
-    <a *ngIf="file.imdb_url" [href]="file.imdb_url" target="_blank" rel="noopener" class="text-blue f-14">
-      <i class="bi bi-box-arrow-up-right mx-1"></i>View on IMDb
-    </a>
-  </div>
-  <div @fade *ngIf="!isWin() && !isLost" class="card-wrapper d-flex col-10 col-sm-3 justify-content-evenly mt-1 mb-3">
-    <button class="pointer bg-yellow hold-button"
-            [disabled]="isAudioPlaying"
-            [class.holding]="isHolding"
-            (mousedown)="startHold(input)"
-            (mouseup)="endHold()"
-            (mouseleave)="cancelHold()"
-            (touchstart)="startHold(input)"
-            (touchmove)="cancelHold()"
-            (touchcancel)="endHold()"
-            (touchend)="cancelHold()">Hint..?</button>
-    <button class="pointer bg-green"
-            [disabled]="isAudioPlaying"
-            [ngClass]="isHolding ? 'col-3' : 'col-5'"
-            (click)="submit(input)">Go!</button>
-  </div>
-  <div *ngIf="isRandom" class="f-12 text-blue mb-2">Random song &ndash; not today's challenge</div>
-  <div class="d-flex col-10 col-sm-4 justify-content-center gap-2">
-    <button class="col-6"
-            [ngClass]="isWin() || isLost ? 'ring' : ''"
-            (click)="getRecentFiles()"
-            [disabled]="isAudioPlaying">Play recent challenges</button>
-    <button class="col-6 bg-yellow"
-            (click)="getRandomFile(input)"
+      <!-- Hints -->
+      <div *ngIf="hints.length" class="d-flex flex-column w-100 gap-1 my-2">
+        <div @fade @glide *ngFor="let hint of hints;" class="hint d-flex align-items-center">
+          <i class="f-12 bi bi-lightbulb-fill text-yellow mx-2"></i>
+          <span class="f-12">{{ hint }}</span>
+        </div>
+      </div>
+
+      <!-- Guess -->
+      <ng-container *ngIf="!isWin() && !isLost">
+        <div class="guess-row d-flex align-items-center w-100 mt-2">
+          <input (focus)="focusInput()"
+                 class="flex-grow-1"
+                 placeholder="Guess the movie..."
+                 type="text"
+                 [matAutocomplete]="auto"
+                 [formControl]="movieInput"
+                 matAutocompletePosition="below"
+                 #input>
+          <i class="bi"></i>
+          <button class="pointer bg-green go-button"
+                  [disabled]="isAudioPlaying"
+                  (click)="submit(input)">Go!</button>
+        </div>
+        <mat-autocomplete
+          #auto="matAutocomplete"
+          [displayWith]="displayMovie"
+          (closed)="onSelectOpen(input)"
+          (opened)="onSelectOpen(input, 'open')"
+          (optionSelected)="onMovieSelected($event.option.value, input)">
+          <mat-option *ngFor="let movie of filteredOptions | async" [value]="movie.id">
+            {{ movie.label ?? movie.name }}
+          </mat-option>
+        </mat-autocomplete>
+        <button class="pointer bg-yellow hold-button mt-2"
+                [disabled]="isAudioPlaying"
+                [class.holding]="isHolding"
+                (mousedown)="startHold(input)"
+                (mouseup)="endHold()"
+                (mouseleave)="cancelHold()"
+                (touchstart)="startHold(input)"
+                (touchmove)="cancelHold()"
+                (touchcancel)="endHold()"
+                (touchend)="cancelHold()">
+          <span class="position-relative">{{ isHolding ? 'Keep holding...' : 'Hold to skip & get a hint' }}</span>
+        </button>
+      </ng-container>
+
+      <!-- Result -->
+      <div @fade *ngIf="(isWin() || isLost) && file.name" class="reveal d-flex align-items-center gap-3 w-100 mt-2">
+        <img *ngIf="file.poster_url" [src]="file.poster_url" [alt]="file.name + ' poster'" class="reveal-poster">
+        <div class="d-flex flex-column flex-grow-1" [class.text-center]="!file.poster_url">
+          <div *ngIf="isWin()" class="text-green fw-700 f-16 mb-1">
+            <i class="bi bi-trophy-fill mx-1"></i>Wow! Good job!
+          </div>
+          <div *ngIf="isLost && !isWin()" class="f-12 text-red mb-1">No more guesses &ndash; the answer was:</div>
+          <div class="fw-700 f-20">{{ file.name }}</div>
+          <div class="f-14 opacity-75 mb-2">{{ file.year }}</div>
+          <a *ngIf="file.imdb_url" [href]="file.imdb_url" target="_blank" rel="noopener" class="imdb-link f-12">
+            <i class="bi bi-box-arrow-up-right mx-1"></i>View on IMDb
+          </a>
+        </div>
+      </div>
+      <button *ngIf="isWin() || isLost" class="col-8 mt-3 bg-yellow ring next-button"
+              (click)="getRandomFile()"
+              [disabled]="isAudioPlaying"><i class="bi bi-shuffle mx-1"></i>Play a random song</button>
+    </ng-container>
+  </section>
+
+  <!-- More ways to play -->
+  <nav class="secondary-actions d-flex justify-content-center gap-2 mt-3">
+    <button *ngIf="isRandom || archiveDate" class="flex-fill" (click)="getFile()"
+            [disabled]="isAudioPlaying"><i class="bi bi-calendar-event mx-1"></i>Today's challenge</button>
+    <button *ngIf="!isRandom && !archiveDate && !isWin() && !isLost" class="flex-fill bg-yellow" (click)="getRandomFile()"
             [disabled]="isAudioPlaying"><i class="bi bi-shuffle mx-1"></i>Random song</button>
+    <button *ngIf="(isRandom || archiveDate) && !isWin() && !isLost" class="flex-fill bg-yellow" (click)="getRandomFile()"
+            [disabled]="isAudioPlaying"><i class="bi bi-skip-forward-fill mx-1"></i>Another song</button>
+    <button class="flex-fill" (click)="toggleRecent()"
+            [disabled]="isAudioPlaying"><i class="bi bi-clock-history mx-1"></i>{{ showRecent ? 'Hide' : 'Recent' }} challenges</button>
+  </nav>
+
+  <!-- Level for random songs -->
+  <div class="level-picker d-flex align-items-center justify-content-center flex-wrap gap-2 mt-3 f-12">
+    <span class="opacity-75">Random songs level:</span>
+    <span class="level-chip pointer" [class.active]="!difficultyFilter" [class.disabled]="isAudioPlaying"
+          (click)="setDifficultyFilter(null)">Any</span>
+    <span *ngFor="let level of difficulties" class="level-chip pointer" [ngClass]="'level-' + level"
+          [class.active]="difficultyFilter === level" [class.disabled]="isAudioPlaying"
+          (click)="setDifficultyFilter(level)">{{ level | titlecase }}</span>
   </div>
-  <button *ngIf="isRandom" class="col-6 col-sm-2 mt-2 f-12" (click)="getFile(undefined, input)"
-          [disabled]="isAudioPlaying">Back to today's challenge</button>
-  <div class="d-flex col-sm-5 col-10 flex-wrap card-wrapper my-3 justify-content-center" @fade @glide *ngIf="files && !isAudioPlaying">
+  <div *ngIf="notice" class="f-12 text-blue mt-2">{{ notice }}</div>
+
+  <!-- Recent challenges -->
+  <div class="recent card-wrapper d-flex flex-wrap justify-content-center gap-2 mt-3" @fade @glide *ngIf="showRecent && files">
     <div *ngIf="isRecentLoading" class="spinner-border" [ngClass]="!isDarkMode ? 'text-dark': 'text-light'" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>
-    <div class="f-12" *ngIf="!files.length && !isRecentLoading"> No recent challenges</div>
-    <div class="m-2" *ngFor="let file of files">
-      <div class="pointer" [ngClass]="{'text-decoration-line-through text-blue': file.clicked}" (click)="getFile(file.token, input)">
-        <i class="bi bi-film mx-1"></i>
-        <i class="f-14 mx-1">{{ file.played_at }}</i>
-      </div>
+    <div class="f-12" *ngIf="!files.length && !isRecentLoading">No recent challenges</div>
+    <div *ngFor="let file of files"
+         class="recent-chip pointer f-12"
+         [class.played]="file.clicked"
+         [class.disabled]="isAudioPlaying"
+         (click)="getFile(file.token)">
+      <i class="bi mx-1" [ngClass]="file.clicked ? 'bi-check2-circle' : 'bi-film'"></i>{{ file.played_at }}
     </div>
   </div>
 </div>

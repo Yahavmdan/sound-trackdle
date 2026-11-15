@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BaseService } from "./base.service";
 import { HttpClient } from "@angular/common/http";
+import { readJson, writeJson } from "../utilities/storage-recovery";
 
 @Injectable({
   providedIn: 'root'
@@ -21,11 +22,11 @@ export class LocalStorageService extends BaseService {
   }
 
   public setItem(key: string, val:  {[key: string]: any}): void {
-    localStorage.setItem(key, this.jsonStringify(val));
+    writeJson(key, val);
   }
 
-  public getItem(key: string): {[key: string]: any} {
-    return this.jsonParse(localStorage.getItem(key) ?? '');
+  public getItem(key: string): {[key: string]: any} | null {
+    return readJson(key);
   }
 
   public isItemExist(key: string): boolean{

@@ -17,6 +17,9 @@ import { MatTooltip } from "@angular/material/tooltip";
 import { LocalStorageService } from "../../shared/services/local-storage.service";
 import { PlayerComponent } from "../player/player.component";
 import { TrackInfoComponent } from "../track-info/track-info.component";
+import { readJson, writeJson } from "../../shared/utilities/storage-recovery";
+
+export type Difficulty = 'easy' | 'medium' | 'hard';
 
 @Component({
   selector: 'app-home',
@@ -46,6 +49,15 @@ export class HomeComponent implements OnInit {
   public isMobile: boolean = false;
   public isAudioPlaying: boolean = false;
   public isRandom: boolean = false;
+  /** Date of the past challenge being replayed, or null for today's / a random song. */
+  public archiveDate: string | null = null;
+  public showRecent: boolean = false;
+  public readonly difficulties: Difficulty[] = ['easy', 'medium', 'hard'];
+  /** Level used for random songs; null = any level. Remembered between visits. */
+  public difficultyFilter: Difficulty | null = this._storedDifficulty();
+  public notice: string | null = null;
+  /** Random songs heard in this visit, so they are not repeated until all were heard. */
+  private _heard: string[] = [];
   private _holdTimeout!: ReturnType<typeof setTimeout>;
   private _holdDuration: number = 1000;
   public isHolding: boolean = false;
@@ -73,6 +85,11 @@ export class HomeComponent implements OnInit {
       : null;
   }
 
+  public toggleRecent(): void {
+    this.showRecent = !this.showRecent;
+    if (this.showRecent) this.getRecentFiles();
+  }
+
   public getRecentFiles(): void {
     if (this.files?.length) return;
     this.isRecentLoading = true;
@@ -91,11 +108,19 @@ export class HomeComponent implements OnInit {
   }
 
   private _isClicked(id: string): boolean {
-    return localStorage.getItem(id) === 'clicked';
+    try {
+      return localStorage.getItem(id) === 'clicked';
+    } catch {
+      return false;
+    }
   }
 
   private _markAsClicked(token: string): void {
-    localStorage.setItem(token, 'clicked');
+    try {
+      localStorage.setItem(token, 'clicked');
+    } catch {
+      // storage full or blocked - only the "played" mark is lost
+    }
   }
 
   public getFile(token?: string, input?: HTMLInputElement): void {
@@ -110,12 +135,29 @@ export class HomeComponent implements OnInit {
       input.disabled = false;
     }
 
+    this.audioUrl.set(null);
+    this.movieInput.enable();
+    this.movieInput.setValue('');
     this._reset();
     this.isRandom = false;
+    this.archiveDate = token ? (this.files?.find(f => f.token === token)?.played_at ?? null) : null;
     this._fileService.getFile().subscribe({
       next: (file: File) => this._handleFileRetrieval(file, token),
       error: () => this._handleError()
     });
+  }
+
+  private _storedDifficulty(): Difficulty | null {
+    const value = readJson<string>('difficulty_filter');
+    return value === 'easy' || value === 'medium' || value === 'hard' ? value : null;
+  }
+
+  /** Choose the level for random songs and play one right away. */
+  public setDifficultyFilter(level: Difficulty | null): void {
+    if (this.isAudioPlaying) return;
+    this.difficultyFilter = level;
+    writeJson('difficulty_filter', level);
+    this.getRandomFile();
   }
 
   /** Plays a random track that is not tied to any day. */
@@ -129,12 +171,27 @@ export class HomeComponent implements OnInit {
     const current = this.file?.token;
     this._reset();
     this.isRandom = true;
-    this._fileService.getRandomFile(current).subscribe({
+    this.archiveDate = null;
+    this.notice = null;
+    if (current && !this._heard.includes(current)) this._heard.push(current);
+    this._heard = this._heard.slice(-100);
+    this._fileService.getRandomFile(this._heard.join(','), this.difficultyFilter).subscribe({
       next: (file: File) => {
+        // the server repeats a song only once all were heard: start a new round
+        if (this._heard.includes(file.token!)) {
+          this._heard = [current!].filter(Boolean);
+          this.notice = `You've heard all ${this.difficultyFilter ?? ''} songs - starting a new round.`.replace('  ', ' ');
+        }
+        this._heard.push(file.token!);
         this.file = {...file, name: '', poster_url: null, imdb_url: null};
         this._stream(this.file.token!);
       },
-      error: () => this._handleError()
+      error: () => {
+        this._handleError();
+        this.notice = this.difficultyFilter
+          ? `No ${this.difficultyFilter} songs available right now.`
+          : 'Could not load a song, please try again.';
+      }
     });
   }
 
@@ -203,7 +260,8 @@ export class HomeComponent implements OnInit {
         this.getFile();
       },
       error: () => {
-        this._movies = (this._localStorageService.getItem('movies') as File[]) ?? [];
+        const cached = this._localStorageService.getItem('movies');
+        this._movies = Array.isArray(cached) ? cached as File[] : [];
         this.getFile();
       }
     });
@@ -294,6 +352,8 @@ export class HomeComponent implements OnInit {
         }
         input.disabled = false;
         this._failSteps();
+        // a wrong answer invites another try; a skip does not
+        if (movieId !== null) setTimeout(() => input.focus());
       },
       error: () => input.disabled = false
     });

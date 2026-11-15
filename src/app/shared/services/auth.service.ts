@@ -4,6 +4,7 @@ import { BaseService } from "./base.service";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { AuthenticationResponse } from "../types/response/response.type";
 import { LoginUser } from "../types/auth/auth.type";
+import { readJson } from "../utilities/storage-recovery";
 
 @Injectable({
   providedIn: 'root'
@@ -18,9 +19,9 @@ export class AuthService extends BaseService {
   }
 
   public getHeaders(): HttpHeaders {
-    const user = JSON.parse(localStorage.getItem('user') ?? '')
+    const user = readJson<{ token?: string }>('user');
     return new HttpHeaders({
-      Authorization: user.token ? `Bearer ${user.token}` : ''
+      Authorization: user?.token ? `Bearer ${user.token}` : ''
     });
   }
 
@@ -40,10 +41,7 @@ export class AuthService extends BaseService {
   }
 
   private isLoggedIn(): boolean {
-    const storedVal = localStorage.getItem('user');
-    return storedVal
-      ? JSON.parse(storedVal).token
-      : false;
+    return !!readJson<{ token?: string }>('user')?.token;
   }
 
 }

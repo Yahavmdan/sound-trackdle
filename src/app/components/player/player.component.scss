@@ -1,41 +1,67 @@
 @import '../../../styles.scss';
 
-.play-btn {
-  width: 0;
-  height: 0;
-  border-top: 20px solid transparent;
-  border-bottom: 20px solid transparent;
-  border-left: 30px solid $light-blue;
+.play-toggle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid $light-blue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all ease 300ms;
+  outline: none;
+  transition: all ease 250ms;
+  box-shadow: 0 6px 18px -6px rgba($blue, .6);
+
+  &:focus-visible {
+    box-shadow: 0 0 0 4px rgba($yellow, .6);
+  }
+
+  &.playing {
+    border-color: $yellow;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+
   @media (hover: hover) and (pointer: fine) {
     &:hover {
-      transform: scale(1.3);
-      border-left: 30px solid $dark-blue;
+      transform: scale(1.08);
+      border-color: $blue;
+
+      .play-btn {
+        border-left-color: $blue;
+      }
+
+      .pause-btn::before, .pause-btn::after {
+        background-color: $blue;
+      }
     }
   }
 }
 
+.play-btn {
+  width: 0;
+  height: 0;
+  margin-left: 6px;
+  border-top: 16px solid transparent;
+  border-bottom: 16px solid transparent;
+  border-left: 24px solid $light-blue;
+  transition: all ease 250ms;
+}
+
 .pause-btn {
-  width: 30px;
-  height: 40px;
-  background: none;
+  width: 24px;
+  height: 30px;
   position: relative;
-  cursor: pointer;
-  transition: all ease 300ms;
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      transform: scale(1.3);
-    }
-  }
 
   &::before, &::after {
     content: '';
     position: absolute;
     top: 0;
-    width: 11px;
+    width: 8px;
     height: 100%;
-    background-color: $light-blue;
+    border-radius: 2px;
+    background-color: $yellow;
+    transition: all ease 250ms;
   }
 
   &::before {
@@ -45,23 +71,29 @@
   &::after {
     right: 0;
   }
-
-  &:hover::before, &:hover::after {
-    background-color: $dark-blue;
-  }
 }
 
 .counter-line {
-  height: 7px;
+  position: relative;
+  height: 8px;
+  border-radius: 10px;
+  background-color: rgba($light-blue, .25);
+}
+
+.unlocked-line {
+  position: absolute;
+  inset: 0 auto 0 0;
   border-radius: 10px;
   background-color: $light-blue;
+  transition: width ease 500ms;
 }
 
 .progress-line {
-  height: 100%;
+  position: absolute;
+  inset: 0 auto 0 0;
   width: 0;
   border-radius: 10px;
-  transition: width ease 500ms;
+  transition: width ease 300ms;
   background: repeating-linear-gradient(
       60deg,
       $light-yellow,
@@ -71,36 +103,81 @@
   );
 }
 
-@keyframes progressAnimation {
-  0% {
-    width: 0;
+.marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 255, 255, .7);
+}
+
+.seek {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 22px;
+  margin: 0 !important;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+
+  &::-webkit-slider-runnable-track {
+    background: transparent;
+    height: 22px;
   }
-  100% {
-    width: 100%;
+  &::-moz-range-track {
+    background: transparent;
+  }
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    border-radius: 50%;
+    background: $yellow;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+    cursor: grab;
+    transition: transform ease 150ms;
+  }
+  &::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: $yellow;
+    border: 2px solid #fff;
+    cursor: grab;
+  }
+  &:active::-webkit-slider-thumb {
+    transform: scale(1.2);
+    cursor: grabbing;
   }
 }
 
-.playing {
-  background: $dark-blue;
-  width: 3rem;
-  height: 40px;
-  border-radius: .3rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: .5rem;
-  box-sizing: border-box;
+.time {
+  min-width: 52px;
+  text-align: right;
+  opacity: .8;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba($yellow, .45); }
+  50% { box-shadow: 0 0 0 10px rgba($yellow, 0); }
 }
 
 .vol-range-container {
+  position: relative;
   cursor: pointer;
   display: flex;
   align-items: center;
-  transition: all 200ms ease;
 }
 
 .icon {
-  margin-top: 2px;
   &:hover ~ .vol-range {
     opacity: 100%;
     width: 70px !important;
@@ -113,11 +190,11 @@
 
 .vol-range {
   margin: 0 !important;
-  position: relative;
+  position: absolute;
+  left: 0;
+  bottom: 30px;
   width: 0 !important;
   opacity: 0;
-  right: 10px;
-  bottom: 20px;
   transition: all 200ms ease;
   border-radius: 2px;
   -webkit-appearance: none;
@@ -147,85 +224,9 @@
   cursor: grabbing;
 }
 
+/* Phones have hardware volume keys; keep just the mute toggle. */
 @media (max-width: 500px) {
   .vol-range {
-    rotate: -90deg;
-    opacity: 100%;
-    position: unset;
-    width: 70px !important;
-
-    &::-webkit-slider-thumb {
-      width: 12px;
-    }
+    display: none;
   }
-  .icon {
-    margin-top: 30px;
-  }
-
-  .vol-range-container {
-    flex-direction: column-reverse;
-  }
-}
-
-.playing-bar {
-  display: inline-block;
-  background: $light-blue;
-  width: 2px;
-  height: 100%;
-  animation: up-and-down 1.3s ease infinite alternate;
-}
-
-.playing-bar1 {
-  height: 60%;
-}
-
-.playing-bar2 {
-  height: 30%;
-  animation-delay: -2.2s;
-}
-
-.playing-bar3 {
-  height: 75%;
-  animation-delay: -3.7s;
-}
-
-.playing-bar4 {
-  height: 50%;
-  animation-delay: -1.7s;
-}
-
-.playing-bar5 {
-  height: 40%;
-  animation-delay: -2.9s;
-}
-
-@keyframes up-and-down {
-  10% {   height: 30%;  }
-  30% {   height: 100%; }
-  60% {   height: 50%;  }
-  80% {   height: 75%;  }
-  100% {  height: 60%;  }
-}
-
-.audio-player {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-button {
-  margin: 5px;
-}
-
-input[type="range"] {
-  width: 150px;
-  margin: 10px 0;
-}
-
-.progress-container {
-  width: 100%;
-}
-
-.time-info {
-  margin-top: 10px;
 }

@@ -1,9 +1,9 @@
 import { Component, input, InputSignal, OnInit, output, } from '@angular/core';
-import { DecimalPipe, NgClass, NgIf, NgSwitch, NgSwitchCase } from "@angular/common";
+import { DecimalPipe, NgClass, NgForOf, NgIf, NgSwitch, NgSwitchCase } from "@angular/common";
 
 @Component({
   selector: 'app-player',
-  imports: [NgIf, NgSwitch, NgClass, NgSwitchCase, DecimalPipe],
+  imports: [NgIf, NgForOf, NgSwitch, NgClass, NgSwitchCase, DecimalPipe],
   templateUrl: './player.component.html',
   styleUrl: './player.component.scss',
   standalone: true
@@ -18,6 +18,18 @@ export class PlayerComponent implements OnInit {
   public setIsAudioIsPlaying = output<boolean>();
   public disableInput = output<boolean>();
   private _intervalId: number | undefined;
+  /** The full clip is 15 s; each step unlocks more of it. */
+  public readonly maxSeconds: number = 15;
+  public readonly marks: number[] = [5, 9, 12];
+  public elapsed: number = 0;
+
+  public limitSeconds(): number {
+    return this._setTimeOfTrackByStep();
+  }
+
+  public unlockedPercent(): number {
+    return this._setTimeOfTrackByStep() / this.maxSeconds * 100;
+  }
 
   ngOnInit(): void {
     this._reset();
@@ -33,6 +45,7 @@ export class PlayerComponent implements OnInit {
         this.audio.pause();
         this._emitValues(false, false);
         this.audio.currentTime = 0;
+        this.elapsed = 0;
       }
     });
   }
@@ -48,6 +61,15 @@ export class PlayerComponent implements OnInit {
     this.audio.pause();
     this._emitValues(false, false);
     this._startAnimation(progress, true);
+  }
+
+  /** Jump to any point of the part of the clip unlocked so far. */
+  public seek(event: Event, progress: HTMLDivElement): void {
+    const limit = this._setTimeOfTrackByStep();
+    const value = Math.min(Number((event.target as HTMLInputElement).value), limit - 0.1);
+    this.audio.currentTime = Math.max(value, 0);
+    this.elapsed = this.audio.currentTime;
+    this._setProgressBarWidth(progress);
   }
 
   public mute(): void {
@@ -90,15 +112,18 @@ export class PlayerComponent implements OnInit {
 
     this._clearInterval();
     this._intervalId = setInterval(() => {
-      if ((this.audio.currentTime > this._setTimeOfTrackByStep()) || this.audio.currentTime === 0) {
+      if (this.audio.currentTime > this._setTimeOfTrackByStep() || this.audio.ended) {
         progress.style.width = '0%';
+        this.elapsed = 0;
         this._clearInterval();
+        return;
       }
 
       if (paused) {
         this._clearInterval();
         return;
       }
+      this.elapsed = Math.min(this.audio.currentTime, this._setTimeOfTrackByStep());
       progress.style.width = this._getCurrentTimeAndTotalTrackTime();
     }, 100);
   }
@@ -115,7 +140,7 @@ export class PlayerComponent implements OnInit {
   }
 
   private _getCurrentTimeAndTotalTrackTime(): string {
-    return this._calculateProgress(this.audio.currentTime, this._setTimeOfTrackByStep(false)).toString() + '%';
+    return this._calculateProgress(Math.min(this.audio.currentTime, this._setTimeOfTrackByStep()), this.maxSeconds).toString() + '%';
   }
 
   private _calculateProgress(currentTime: number, totalTime: number): number {

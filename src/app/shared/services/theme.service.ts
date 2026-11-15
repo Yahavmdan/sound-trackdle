@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { readJson, writeJson } from '../utilities/storage-recovery';
 
 @Injectable({
   providedIn: 'root'
@@ -10,20 +11,20 @@ export class ThemeService {
   public isDarkMode$ = this._isDarkMode.asObservable();
 
   private getDefaultValue(): boolean {
-    const storedVal = localStorage.getItem('theme');
-    return storedVal
-      ? JSON.parse(storedVal).darkMode
+    const stored = readJson<{ darkMode?: unknown }>('theme');
+    return typeof stored?.darkMode === 'boolean'
+      ? stored.darkMode
       : this.initializeLocalStorage();
   }
 
   private initializeLocalStorage(): boolean {
-    localStorage.setItem('theme', JSON.stringify({ darkMode: false }));
+    writeJson('theme', {darkMode: false});
     return false;
   }
 
   public toggleMode(): void {
     const val = !this._isDarkMode.value;
-    localStorage.setItem('theme', JSON.stringify({ darkMode: val }));
+    writeJson('theme', {darkMode: val});
     this._isDarkMode.next(val);
   }
 }
