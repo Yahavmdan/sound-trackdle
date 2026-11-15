@@ -1,4 +1,4 @@
-import { Component, input, InputSignal, OnInit, output, } from '@angular/core';
+import { Component, input, InputSignal, OnDestroy, OnInit, output, } from '@angular/core';
 import { DecimalPipe, NgClass, NgForOf, NgIf, NgSwitch, NgSwitchCase } from "@angular/common";
 
 @Component({
@@ -9,7 +9,7 @@ import { DecimalPipe, NgClass, NgForOf, NgIf, NgSwitch, NgSwitchCase } from "@an
   standalone: true
 })
 
-export class PlayerComponent implements OnInit {
+export class PlayerComponent implements OnInit, OnDestroy {
 
   public audioUrl: InputSignal<string | null> = input<string | null>(null);
   public step: InputSignal<number> = input(0);
@@ -37,8 +37,12 @@ export class PlayerComponent implements OnInit {
 
   private _reset(): void {
     this.audio = new Audio(this.audioUrl() ?? '');
+    this.audio.preload = 'auto';
     this.audio.load();
+    this._loadIntoMemory();
     this.audio.currentTime = 0;
+    // a position chosen before the audio was ready is applied once it is
+    this.audio.addEventListener('loadedmetadata', () => this._applyStartAt());
 
     this.audio.addEventListener('timeupdate', () => {
       if (this.audio.currentTime >= this._setTimeOfTrackByStep()) {
@@ -51,6 +55,7 @@ export class PlayerComponent implements OnInit {
   }
 
   public play(progress: HTMLDivElement): void {
+    this._applyStartAt();
     void this.audio.play();
     this._emitValues(true, true);
     this._setProgressBarWidth(progress);
@@ -66,10 +71,44 @@ export class PlayerComponent implements OnInit {
   /** Jump to any point of the part of the clip unlocked so far. */
   public seek(event: Event, progress: HTMLDivElement): void {
     const limit = this._setTimeOfTrackByStep();
-    const value = Math.min(Number((event.target as HTMLInputElement).value), limit - 0.1);
-    this.audio.currentTime = Math.max(value, 0);
-    this.elapsed = this.audio.currentTime;
-    this._setProgressBarWidth(progress);
+    const value = Math.max(Math.min(Number((event.target as HTMLInputElement).value), limit - 0.1), 0);
+    this.elapsed = value;
+    this._startAt = value;
+    this._applyStartAt();
+    progress.style.width = this._calculateProgress(value, this.maxSeconds) + '%';
+  }
+
+  private _startAt: number | null = null;
+  private _blobUrl: string | null = null;
+
+  /**
+   * Seeking needs the server to support partial downloads; a clip is small, so load
+   * it fully and play it from memory - then dragging the timeline works everywhere.
+   */
+  private _loadIntoMemory(): void {
+    const url = this.audioUrl();
+    if (!url) return;
+    fetch(url)
+      .then(res => res.ok ? res.blob() : Promise.reject(res.status))
+      .then(blob => {
+        if (this.audio.src !== url || !this.audio.paused) return; // track changed or already playing
+        this._blobUrl = URL.createObjectURL(blob);
+        this.audio.src = this._blobUrl;
+        this.audio.load();
+      })
+      .catch(() => { /* keep streaming from the URL */ });
+  }
+
+  ngOnDestroy(): void {
+    this.audio.pause();
+    if (this._blobUrl) URL.revokeObjectURL(this._blobUrl);
+  }
+
+  /** Move the audio to the chosen position; kept pending while the audio is not loaded yet. */
+  private _applyStartAt(): void {
+    if (this._startAt === null || this.audio.readyState < HTMLMediaElement.HAVE_METADATA) return;
+    this.audio.currentTime = this._startAt;
+    this._startAt = null;
   }
 
   public mute(): void {
