@@ -5,7 +5,13 @@ import { BaseService } from "./base.service";
 import { HttpClient } from "@angular/common/http";
 import { AuthService } from "./auth.service";
 
-export type GuessResult = { correct: boolean; name?: string; year?: number };
+export type GuessResult = {
+  correct: boolean;
+  name?: string;
+  year?: number;
+  poster_url?: string | null;
+  imdb_url?: string | null;
+};
 
 @Injectable({
   providedIn: 'root'

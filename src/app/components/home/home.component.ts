@@ -126,7 +126,7 @@ export class HomeComponent implements OnInit {
 
   private _handleFileRetrieval(file: File, token?: string): void {
     const archived = token ? this.files?.find(f => f.token === token) : undefined;
-    this.file = archived ? {...archived, name: ''} : file;
+    this.file = archived ? {...archived, name: '', poster_url: null, imdb_url: null} : file;
     this._stream(this.file.token!);
   }
 
@@ -253,7 +253,10 @@ export class HomeComponent implements OnInit {
     input.disabled = true;
     this._fileService.guess(this.file.token!, movieId, this.step).subscribe({
       next: res => {
-        if (res.name) this.file = {...this.file, name: res.name, year: res.year ?? this.file.year};
+        if (res.name) this.file = {
+          ...this.file, name: res.name, year: res.year ?? this.file.year,
+          poster_url: res.poster_url, imdb_url: res.imdb_url
+        };
         if (res.correct) {
           this._handleSuccess(input);
           return;
