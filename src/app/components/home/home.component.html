@@ -51,7 +51,7 @@
       (opened)="onSelectOpen(input, 'open')"
       (optionSelected)="onMovieSelected($event.option.value, input)">
       <mat-option *ngFor="let movie of filteredOptions | async" [value]="movie.id">
-        {{ movie.name }}
+        {{ movie.label ?? movie.name }}
       </mat-option>
     </mat-autocomplete>
 
@@ -82,7 +82,7 @@
     </div>
     <div class="f-12" *ngIf="!files.length && !isRecentLoading"> No recent challenges</div>
     <div class="m-2" *ngFor="let file of files">
-      <div class="pointer" [ngClass]="{'text-decoration-line-through text-blue': file.clicked}" (click)="getFile(file.id, input)">
+      <div class="pointer" [ngClass]="{'text-decoration-line-through text-blue': file.clicked}" (click)="getFile(file.token, input)">
         <i class="bi bi-film mx-1"></i>
         <i class="f-14 mx-1">{{ file.played_at }}</i>
       </div>

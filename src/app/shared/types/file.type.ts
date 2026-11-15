@@ -1,6 +1,8 @@
 export type File = {
   id: number;
+  token?: string;
   name: string;
+  label?: string;
   year: number;
   file_path?: string;
   main_actor?: string;
